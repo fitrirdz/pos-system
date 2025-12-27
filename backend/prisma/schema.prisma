@@ -1,5 +1,6 @@
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -23,15 +24,15 @@ model Product {
 }
 
 model Transaction {
-  id        String            @id @default(uuid())
+  id        String             @id @default(uuid())
   items     TransactionItem[]
   total     Int
   tax       Int
-  createdAt DateTime          @default(now())
+  createdAt DateTime           @default(now())
 }
 
 model TransactionItem {
-  id            String @id @default(uuid())
+  id            String   @id @default(uuid())
   transactionId String
   productId     String
   qty           Int

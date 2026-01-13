@@ -1,36 +1,52 @@
-import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { Request, Response } from "express";
+import bcrypt from "bcrypt";
+import prisma from "../lib/prisma";
+import { signToken } from "../utils/jwt";
 
-export const login = async (req: Request, res: Response) => {
-  const { username, password } = req.body;
+export async function login(req: Request, res: Response) {
+  try {
+    const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Username & password required' });
-  }
+    if (!username || !password) {
+      return res.status(400).json({
+        message: "Username and password are required",
+      });
+    }
 
-  const user = await prisma.user.findUnique({
-    where: { username },
-  });
-  if (!user) {
-    return res.status(401).json({ message: 'Invalid credentials' });
-  }
+    const user = await prisma.user.findUnique({
+      where: { username },
+    });
 
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) {
-    return res.status(401).json({ message: 'Invalid credentials' });
-  }
+    if (!user) {
+      return res.status(401).json({
+        message: "Username or password is incorrect",
+      });
+    }
 
-  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-    expiresIn: '1d',
-  });
+    const isMatch = await bcrypt.compare(password, user.password);
 
-  res.json({
-    token,
-    user: {
-      id: user.id,
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Username or password is incorrect",
+      });
+    }
+
+    const token = signToken({
+      userId: user.id,
       username: user.username,
-    },
-  });
-};
+    });
+
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}

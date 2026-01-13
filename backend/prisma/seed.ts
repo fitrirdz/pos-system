@@ -1,26 +1,26 @@
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { prisma } from '../src/lib/prisma';
+
+const prisma = new PrismaClient();
 
 async function main() {
+  // hapus admin lama kalau ada
+  await prisma.user.deleteMany({
+    where: { username: 'admin' },
+  });
+
   const hashedPassword = await bcrypt.hash('admin123', 10);
 
-  await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
       username: 'admin',
       password: hashedPassword,
     },
   });
 
-  console.log('✅ Seeding completed');
+  console.log('✅ Admin user created');
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

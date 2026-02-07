@@ -13,20 +13,37 @@ export const createTransaction = async (req: Request, res: Response) => {
     }
 
     const transaction = await prisma.$transaction(async (tx) => {
-      // 1️⃣ Ambil product berdasarkan CODE
+      // 1️⃣ ambil setting tax
+      const setting = await tx.setting.findUnique({
+        where: { id: 1 },
+      });
+
+      const taxRate = setting?.taxRate || 0;
+
+      // 2️⃣ ambil product by CODE
       const products = await tx.product.findMany({
         where: {
-          code: {
-            in: items.map((i) => i.code),
-          },
+          code: { in: items.map((i) => i.code) },
         },
       });
 
       const productMap = new Map(products.map((p) => [p.code, p]));
 
-      let total = 0;
+      // 3️⃣ ambil discount
+      const discounts = await tx.discount.findMany({
+        where: {
+          productCode: { in: items.map((i) => i.code) },
+        },
+      });
 
-      // 2️⃣ Validasi stock + hitung total
+      const discountMap = new Map(
+        discounts.map((d) => [d.productCode, d.percentage]),
+      );
+
+      let subtotal = 0;
+      let discountTotal = 0;
+
+      // 4️⃣ validasi + hitung
       for (const item of items) {
         const product = productMap.get(item.code);
 
@@ -35,21 +52,32 @@ export const createTransaction = async (req: Request, res: Response) => {
         }
 
         if (product.stock < item.qty) {
-          throw new Error(`Stock not enough for product: ${product.name}`);
+          throw new Error(`Stock not enough for ${product.name}`);
         }
 
-        total += product.price * item.qty;
+        const itemTotal = product.price * item.qty;
+        const discountPercent = discountMap.get(item.code) || 0;
+        const discountAmount = itemTotal * (discountPercent / 100);
+
+        subtotal += itemTotal;
+        discountTotal += discountAmount;
       }
 
-      // 3️⃣ Create transaction
+      const taxableAmount = subtotal - discountTotal;
+      const tax = taxableAmount * (taxRate / 100);
+      const total = taxableAmount + tax;
+
+      // 5️⃣ create transaction
       const createdTransaction = await tx.transaction.create({
         data: {
+          subtotal,
+          discountTotal,
+          tax,
           total,
-          tax: 0,
         },
       });
 
-      // 4️⃣ Create items + update stock
+      // 6️⃣ create items + update stock
       for (const item of items) {
         const product = productMap.get(item.code)!;
 
@@ -65,9 +93,7 @@ export const createTransaction = async (req: Request, res: Response) => {
         await tx.product.update({
           where: { id: product.id },
           data: {
-            stock: {
-              decrement: item.qty,
-            },
+            stock: { decrement: item.qty },
           },
         });
       }
@@ -75,12 +101,12 @@ export const createTransaction = async (req: Request, res: Response) => {
       return createdTransaction;
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       message: 'Transaction created',
       data: transaction,
     });
   } catch (error: any) {
-    return res.status(400).json({
+    res.status(400).json({
       message: error.message || 'Failed to create transaction',
     });
   }

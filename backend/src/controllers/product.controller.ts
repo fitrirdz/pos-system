@@ -6,9 +6,9 @@ import prisma from '../lib/prisma';
  */
 export async function createProduct(req: Request, res: Response) {
   try {
-    const { code, name, price, stock } = req.body;
+    const { code, name, price, stock, categoryId } = req.body;
 
-    if (!code || !name || !price || !stock) {
+    if (!code || !name || !price || !stock || !categoryId) {
       return res.status(400).json({
         message: 'All fields are required',
       });
@@ -30,6 +30,7 @@ export async function createProduct(req: Request, res: Response) {
         name,
         price: Number(price),
         stock: Number(stock),
+        categoryId,
       },
     });
 
@@ -49,6 +50,9 @@ export async function getProducts(_: Request, res: Response) {
   try {
     const products = await prisma.product.findMany({
       orderBy: { name: 'asc' },
+      include: {
+        category: true,
+      },
     });
 
     return res.status(200).json(products);

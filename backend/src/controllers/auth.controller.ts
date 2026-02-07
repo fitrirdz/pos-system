@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
-import bcrypt from "bcrypt";
-import prisma from "../lib/prisma";
-import { signToken } from "../utils/jwt";
+import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import prisma from '../lib/prisma';
+import { signToken } from '../utils/jwt';
 
 export async function login(req: Request, res: Response) {
   try {
@@ -9,7 +9,7 @@ export async function login(req: Request, res: Response) {
 
     if (!username || !password) {
       return res.status(400).json({
-        message: "Username and password are required",
+        message: 'Username and password are required',
       });
     }
 
@@ -19,7 +19,7 @@ export async function login(req: Request, res: Response) {
 
     if (!user) {
       return res.status(401).json({
-        message: "Username or password is incorrect",
+        message: 'Username or password is incorrect',
       });
     }
 
@@ -27,13 +27,14 @@ export async function login(req: Request, res: Response) {
 
     if (!isMatch) {
       return res.status(401).json({
-        message: "Username or password is incorrect",
+        message: 'Username or password is incorrect',
       });
     }
 
     const token = signToken({
       userId: user.id,
       username: user.username,
+      role: user.role,
     });
 
     return res.json({
@@ -41,12 +42,14 @@ export async function login(req: Request, res: Response) {
       user: {
         id: user.id,
         username: user.username,
+        role: user.role,
       },
+
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: "Internal server error",
+      message: 'Internal server error',
     });
   }
 }

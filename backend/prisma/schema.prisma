@@ -11,14 +11,28 @@ model User {
   id       String @id @default(uuid())
   username String @unique
   password String
+  role     UserRole @default(ADMIN)
+}
+
+enum UserRole {
+  ADMIN
+  CASHIER
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
 }
 
 model Product {
-  id    String @id @default(uuid())
-  code  String @unique
-  name  String
-  price Int
-  stock Int
+  id         String   @id @default(uuid())
+  code       String   @unique
+  name       String
+  price      Int
+  stock      Int
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
 
   items TransactionItem[]
 }

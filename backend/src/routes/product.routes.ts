@@ -13,7 +13,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.post('/', requireRole('ADMIN'), createProduct);
+router.post('/', requireRole(['ADMIN']), createProduct);
 router.get('/', getProducts);
 router.get('/:id', getProductById);
 router.put('/:id', updateProduct);

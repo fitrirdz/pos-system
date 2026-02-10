@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Transaction` ADD COLUMN `type` ENUM('SALE', 'STOCK_IN') NOT NULL DEFAULT 'SALE';

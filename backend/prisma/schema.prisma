@@ -38,12 +38,13 @@ model Product {
 }
 
 model Transaction {
-  id            String   @id @default(uuid())
+  id            String           @id @default(uuid())
+  type          TransactionType @default(SALE)
   subtotal      Int
   discountTotal Int
   tax           Int
   total         Int
-  createdAt     DateTime @default(now())
+  createdAt     DateTime         @default(now())
 
   items TransactionItem[]
 }
@@ -68,5 +69,10 @@ model Discount {
   id          String @id @default(uuid())
   productCode String
   percentage  Int 
+}
+
+enum TransactionType {
+  SALE
+  STOCK_IN
 }
 

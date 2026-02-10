@@ -6,33 +6,49 @@ import prisma from '../lib/prisma';
  */
 export const createTransaction = async (req: Request, res: Response) => {
   try {
-    const { items } = req.body;
+    /**
+     * Default type = SALE
+     * UI belum kirim type juga aman
+     */
+    const { type = 'SALE', items } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: 'Items is required' });
+      return res.status(400).json({
+        message: 'Items is required',
+      });
     }
 
     const transaction = await prisma.$transaction(async (tx) => {
-      // 1️⃣ ambil setting tax
+      /**
+       * 1️⃣ Ambil setting tax (global)
+       */
       const setting = await tx.setting.findUnique({
         where: { id: 1 },
       });
 
       const taxRate = setting?.taxRate || 0;
 
-      // 2️⃣ ambil product by CODE
+      /**
+       * 2️⃣ Ambil product berdasarkan CODE
+       */
       const products = await tx.product.findMany({
         where: {
-          code: { in: items.map((i) => i.code) },
+          code: {
+            in: items.map((i) => i.code),
+          },
         },
       });
 
       const productMap = new Map(products.map((p) => [p.code, p]));
 
-      // 3️⃣ ambil discount
+      /**
+       * 3️⃣ Ambil discount per product
+       */
       const discounts = await tx.discount.findMany({
         where: {
-          productCode: { in: items.map((i) => i.code) },
+          productCode: {
+            in: items.map((i) => i.code),
+          },
         },
       });
 
@@ -43,7 +59,9 @@ export const createTransaction = async (req: Request, res: Response) => {
       let subtotal = 0;
       let discountTotal = 0;
 
-      // 4️⃣ validasi + hitung
+      /**
+       * 4️⃣ Validasi & hitung subtotal + discount
+       */
       for (const item of items) {
         const product = productMap.get(item.code);
 
@@ -51,25 +69,39 @@ export const createTransaction = async (req: Request, res: Response) => {
           throw new Error(`Product not found: ${item.code}`);
         }
 
-        if (product.stock < item.qty) {
+        if (type === 'SALE' && product.stock < item.qty) {
           throw new Error(`Stock not enough for ${product.name}`);
         }
 
         const itemTotal = product.price * item.qty;
-        const discountPercent = discountMap.get(item.code) || 0;
-        const discountAmount = itemTotal * (discountPercent / 100);
-
         subtotal += itemTotal;
-        discountTotal += discountAmount;
+
+        if (type === 'SALE') {
+          const discountPercent = discountMap.get(item.code) || 0;
+          const discountAmount = itemTotal * (discountPercent / 100);
+          discountTotal += discountAmount;
+        }
       }
 
-      const taxableAmount = subtotal - discountTotal;
-      const tax = taxableAmount * (taxRate / 100);
-      const total = taxableAmount + tax;
+      /**
+       * 5️⃣ Hitung tax & total
+       * STOCK_IN tidak kena tax & discount
+       */
+      let tax = 0;
+      let total = subtotal;
 
-      // 5️⃣ create transaction
+      if (type === 'SALE') {
+        const taxableAmount = subtotal - discountTotal;
+        tax = taxableAmount * (taxRate / 100);
+        total = taxableAmount + tax;
+      }
+
+      /**
+       * 6️⃣ Create transaction
+       */
       const createdTransaction = await tx.transaction.create({
         data: {
+          type,
           subtotal,
           discountTotal,
           tax,
@@ -77,7 +109,9 @@ export const createTransaction = async (req: Request, res: Response) => {
         },
       });
 
-      // 6️⃣ create items + update stock
+      /**
+       * 7️⃣ Create items + update stock
+       */
       for (const item of items) {
         const product = productMap.get(item.code)!;
 
@@ -90,10 +124,14 @@ export const createTransaction = async (req: Request, res: Response) => {
           },
         });
 
+        const stockChange = type === 'SALE' ? -item.qty : item.qty;
+
         await tx.product.update({
           where: { id: product.id },
           data: {
-            stock: { decrement: item.qty },
+            stock: {
+              increment: stockChange,
+            },
           },
         });
       }
@@ -101,12 +139,12 @@ export const createTransaction = async (req: Request, res: Response) => {
       return createdTransaction;
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Transaction created',
       data: transaction,
     });
   } catch (error: any) {
-    res.status(400).json({
+    return res.status(400).json({
       message: error.message || 'Failed to create transaction',
     });
   }

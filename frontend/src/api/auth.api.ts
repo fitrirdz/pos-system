@@ -1,21 +1,18 @@
 import api from "./axios";
 
-export interface LoginPayload {
+export const login = async (payload: {
   username: string;
   password: string;
-}
-
-export const login = async (data: LoginPayload) => {
-  const response = await api.post("/auth/login", data);
-  return response.data;
-};
-
-export const logout = async () => {
-  const response = await api.post("/auth/logout");
-  return response.data;
+}) => {
+  const { data } = await api.post("/auth/login", payload);
+  return data;
 };
 
 export const getMe = async () => {
-  const response = await api.get("/auth/me");
-  return response.data;
+  const { data } = await api.get("/auth/me");
+  return data;
+};
+
+export const logout = async () => {
+  await api.post("/auth/logout");
 };

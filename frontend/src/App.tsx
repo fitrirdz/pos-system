@@ -1,27 +1,19 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/auth-context';
+import { Routes, Route } from 'react-router-dom';
 import Login from './pages/login';
 import ProtectedRoute from './components/protected-routes';
+import MainLayout from './layouts/main-layout';
+import Dashboard from './pages/dashboard';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Route */}
-          <Route path='/' element={<Login />} />
+    <Routes>
+      <Route path='/' element={<Login />} />
 
-          {/* Protected Route */}
-          <Route
-            path='/pos'
-            element={
-              <ProtectedRoute>
-                <h1>POS Dashboard</h1>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      <Route element={<ProtectedRoute />}>
+        <Route element={<MainLayout />}>
+          <Route path='/dashboard' element={<Dashboard />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 }

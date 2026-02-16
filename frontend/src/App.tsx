@@ -1,13 +1,5 @@
-import './App.css';
+import Login from './pages/login';
 
-function App() {
-  return (
-    <div className='min-h-screen flex items-center justify-center bg-slate-100'>
-      <h1 className='text-3xl font-bold text-indigo-600'>
-        POS System Ready 🚀
-      </h1>
-    </div>
-  );
+export default function App() {
+  return <Login />;
 }
-
-export default App;

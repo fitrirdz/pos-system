@@ -1,50 +1,49 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { logout } from '../api/auth.api';
 import { useAuth } from '../context/use-auth';
 
 export default function MainLayout() {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { setUser } = useAuth();
 
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
+  const handleLogout = () => {
+    logout();
     navigate('/');
   };
 
-  const changeTheme = (theme: string) => {
-    document.documentElement.className = theme;
-    localStorage.setItem('theme', theme);
-  };
-
   return (
-    <div className='min-h-screen bg-appbg'>
-      <header className='flex justify-between items-center p-4 bg-primary text-white'>
-        <h1 className='font-bold text-lg'>POS System</h1>
+    <div className='flex min-h-screen bg-gray-100'>
+      {/* Sidebar */}
+      <aside className='w-64 bg-blue-700 text-white p-6 hidden md:block'>
+        <h2 className='text-xl font-bold mb-8'>MyPOS</h2>
 
-        <div className='flex items-center gap-3'>
-          <select
-            onChange={(e) => changeTheme(e.target.value)}
-            className='text-black px-2 py-1 rounded'
-            defaultValue={localStorage.getItem('theme') || ''}
-          >
-            <option value=''>Blue</option>
-            <option value='theme-green'>Green</option>
-            <option value='theme-purple'>Purple</option>
-          </select>
+        <nav className='space-y-4'>
+          <div className='hover:text-blue-200 cursor-pointer'>Dashboard</div>
+          <div className='hover:text-blue-200 cursor-pointer'>Transactions</div>
+          <div className='hover:text-blue-200 cursor-pointer'>Products</div>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className='flex-1 flex flex-col'>
+        {/* Topbar */}
+        <header className='bg-white shadow px-6 py-4 flex justify-between items-center'>
+          <div>
+            <h1 className='font-semibold text-lg'>Welcome, {user?.username}</h1>
+          </div>
 
           <button
             onClick={handleLogout}
-            className='bg-white text-primary px-3 py-1 rounded'
+            className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition'
           >
             Logout
           </button>
-        </div>
-      </header>
+        </header>
 
-      <main className='p-6'>
-        <Outlet />
-      </main>
+        {/* Page Content */}
+        <main className='p-6'>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

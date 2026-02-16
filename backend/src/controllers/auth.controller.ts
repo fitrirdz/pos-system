@@ -37,14 +37,21 @@ export async function login(req: Request, res: Response) {
       role: user.role,
     });
 
+    // ✅ Simpan token di httpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // ganti true kalau production HTTPS
+      sameSite: 'lax',
+      maxAge: 1000 * 60 * 60 * 24, // 1 hari
+    });
+
     return res.json({
-      token,
+      message: 'Login success',
       user: {
         id: user.id,
         username: user.username,
         role: user.role,
       },
-
     });
   } catch (error) {
     console.error(error);
@@ -52,4 +59,15 @@ export async function login(req: Request, res: Response) {
       message: 'Internal server error',
     });
   }
+}
+
+export function logout(req: Request, res: Response) {
+  res.clearCookie('token');
+  return res.json({ message: 'Logged out successfully' });
+}
+
+export function me(req: any, res: Response) {
+  return res.json({
+    user: req.user,
+  });
 }

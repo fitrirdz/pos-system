@@ -1,28 +1,29 @@
-import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../utils/jwt";
+import { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/jwt';
 
 export function authMiddleware(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
-  const authHeader = req.headers.authorization;
+  const token = req.cookies.token;
 
-  if (!authHeader) {
+  if (!token) {
     return res.status(401).json({
-      message: "Unauthorized",
+      message: 'Unauthorized',
     });
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
     const decoded = verifyToken(token);
+
+    // attach user ke request
     (req as any).user = decoded;
+
     next();
-  } catch {
+  } catch (error) {
     return res.status(401).json({
-      message: "Invalid token",
+      message: 'Invalid token',
     });
   }
 }

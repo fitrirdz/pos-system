@@ -1,38 +1,13 @@
 import { useEffect, useState } from "react";
-import api from '../api/axios';
 import type { CartItem, Product } from '../interfaces';
+import api from '../api/axios';
+import PaymentModal from '../components/payment-modal';
 
 export default function NewTransaction() {
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(false);
-
-    const handleProcessPayment = async () => {
-        if (cart.length === 0) return;
-
-        try {
-            setLoading(true);
-
-            const payload = {
-                type: "SALE",
-                items: cart.map((item) => ({
-                    code: item.code,
-                    qty: item.qty,
-                })),
-            };
-
-            await api.post("/transactions", payload);
-
-            setCart([]); // CLEAR CART
-            alert("Transaction successful!");
-        } catch (error) {
-            console.error("Transaction failed", error);
-            alert("Failed to process transaction");
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -68,9 +43,34 @@ export default function NewTransaction() {
         0
     );
 
+    const handleConfirmPayment = async () => {
+        try {
+            setLoading(true);
+
+            const payload = {
+                type: "SALE",
+                items: cart.map((item) => ({
+                    code: item.code,
+                    qty: item.qty,
+                })),
+            };
+
+            await api.post("/transactions", payload);
+
+            setCart([]);
+            setShowPaymentModal(false);
+            alert("Transaction successful!");
+        } catch (error) {
+            console.error("Transaction failed", error);
+            alert("Transaction failed!");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
-            {/* LEFT */}
+            {/* Products */}
             <div className="md:col-span-2 bg-white p-6 rounded-xl shadow">
                 <h2 className="text-lg font-semibold mb-4">
                     Products
@@ -92,7 +92,7 @@ export default function NewTransaction() {
                 </div>
             </div>
 
-            {/* RIGHT */}
+            {/* Cart */}
             <div className="bg-white p-6 rounded-xl shadow flex flex-col">
                 <h2 className="text-lg font-semibold mb-4">
                     Cart
@@ -129,14 +129,23 @@ export default function NewTransaction() {
                     </div>
 
                     <button
-                        disabled={cart.length === 0 || loading}
+                        onClick={() => setShowPaymentModal(true)}
+                        disabled={cart.length === 0}
                         className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-3 rounded-lg font-semibold transition"
-                        onClick={handleProcessPayment}
                     >
-                        {loading ? "Processing..." : "Process Payment"}
+                        Process Payment
                     </button>
                 </div>
             </div>
+
+            {showPaymentModal && (
+                <PaymentModal
+                    total={total}
+                    loading={loading}
+                    onClose={() => setShowPaymentModal(false)}
+                    onConfirm={handleConfirmPayment}
+                />
+            )}
         </div>
     );
 }

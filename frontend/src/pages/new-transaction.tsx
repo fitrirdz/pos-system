@@ -1,38 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { CartItem, Product, Transaction } from '../interfaces';
-import api from '../api/axios';
-import { getCategories, type Category } from '../api/category.api';
 import PaymentModal from '../components/payment-modal';
 import ReceiptModal from '../components/receipt-modal';
 import ProductsCard from '../components/products-card';
 import Cart from '../components/cart';
 import { useToast } from '../context/use-toast';
+import { useProducts } from '../hooks/use-products';
+import { useCategories } from '../hooks/use-categories';
+import { useCreateTransaction } from '../hooks/use-transactions';
 
 export default function NewTransaction() {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
+    // Query hooks for data fetching
+    const { data: products = [], isLoading: productsLoading } = useProducts();
+    const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+    const createTransactionMutation = useCreateTransaction();
+    
+    // Local state
     const [cart, setCart] = useState<CartItem[]>([]);
-    const [loading, setLoading] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [transaction, setTransaction] = useState<Transaction | null>(null);
     const { showToast } = useToast();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [productsRes, categoriesRes] = await Promise.all([
-                    api.get("/products"),
-                    getCategories(),
-                ]);
-                setProducts(productsRes.data);
-                setCategories(categoriesRes);
-            } catch (error) {
-                console.error("Failed to fetch data", error);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const isLoading = productsLoading || categoriesLoading;
 
     const addToCart = (product: Product) => {
         // Prevent adding out of stock items
@@ -69,21 +58,19 @@ export default function NewTransaction() {
 
     const handleConfirmPayment = async () => {
         // Prevent double submit
-        if (loading) return;
+        if (createTransactionMutation.isPending) return;
 
         try {
-            setLoading(true);
-
             const payload = {
-                type: "SALE",
+                type: "SALE" as const,
                 items: cart.map((item) => ({
                     code: item.code,
-                    qty: item.qty,
+                    quantity: item.qty,
                 })),
             };
 
-            const response = await api.post("/transactions", payload);
-            const transactionData = response.data.data;
+            const response = await createTransactionMutation.mutateAsync(payload);
+            const transactionData = response.data;
 
             // Store transaction data
             setTransaction(transactionData);
@@ -98,10 +85,17 @@ export default function NewTransaction() {
             console.error("Transaction failed", error);
             const errorMessage = error instanceof Error ? error.message : "Transaction failed!";
             showToast(errorMessage, "error");
-        } finally {
-            setLoading(false);
         }
     };
+
+    // Show loading state while fetching initial data
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="text-lg">Loading...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
@@ -123,7 +117,7 @@ export default function NewTransaction() {
             {showPaymentModal && (
                 <PaymentModal
                     total={total}
-                    loading={loading}
+                    loading={createTransactionMutation.isPending}
                     onClose={() => setShowPaymentModal(false)}
                     onConfirm={handleConfirmPayment}
                 />

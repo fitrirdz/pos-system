@@ -30,16 +30,17 @@ export default function NewTransaction() {
             return;
         }
 
+        // Check if item already exists in cart and would exceed stock
+        const existing = cart.find((item) => item.code === product.code);
+        if (existing && existing.qty >= product.stock) {
+            showToast(`Only ${product.stock} items available in stock`, "error");
+            return;
+        }
+
         setCart((prev) => {
             const existing = prev.find((item) => item.code === product.code);
 
             if (existing) {
-                // Check if adding one more would exceed stock
-                if (existing.qty >= product.stock) {
-                    showToast(`Only ${product.stock} items available in stock`, "error");
-                    return prev;
-                }
-
                 return prev.map((item) =>
                     item.code === product.code
                         ? { ...item, qty: item.qty + 1 }

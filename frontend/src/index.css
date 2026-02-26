@@ -2,19 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 
+  Theme colors are automatically loaded from src/constants/theme.ts
+  Change PRIMARY_COLOR in that file to update the theme across the entire app
+*/
 :root {
   --color-primary: 37 99 235;
   --color-primary-hover: 29 78 216;
+  --color-primary-light: 239 246 255;
 }
 
+/* Legacy theme classes - kept for reference but use theme.ts instead */
 .theme-green {
   --color-primary: 22 163 74;
   --color-primary-hover: 21 128 61;
+  --color-primary-light: 220 252 231;
 }
 
 .theme-purple {
   --color-primary: 147 51 234;
   --color-primary-hover: 126 34 206;
+  --color-primary-light: 243 232 255;
 }
 
 @keyframes slide-in {

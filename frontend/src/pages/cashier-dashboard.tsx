@@ -18,7 +18,7 @@ export default function CashierDashboard() {
             </div>
 
             {/* Big Action Card */}
-            <div className="bg-blue-600 text-white p-8 rounded-2xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="bg-primary text-white p-8 rounded-2xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div>
                     <h2 className="text-2xl font-bold">
                         Start New Transaction
@@ -30,7 +30,7 @@ export default function CashierDashboard() {
 
                 <button
                     onClick={() => navigate("/transactions/new")}
-                    className="bg-white text-blue-700 font-bold px-8 py-4 rounded-xl text-lg hover:bg-gray-100 transition"
+                    className="bg-white text-primary font-bold px-8 py-4 rounded-xl text-lg hover:bg-gray-100 transition"
                 >
                     + New Sale
                 </button>

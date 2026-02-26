@@ -17,7 +17,7 @@ export default function MainLayout() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-700 text-white p-6 hidden md:flex md:flex-col">
+      <aside className="w-64 bg-primary text-white p-6 hidden md:flex md:flex-col">
         <div>
           <h2 className="text-xl font-bold mb-8">MyPOS</h2>
 
@@ -28,8 +28,8 @@ export default function MainLayout() {
                 to={item.path}
                 className={({ isActive }) =>
                   `block px-4 py-2 rounded-lg transition ${isActive
-                    ? "bg-white text-blue-700 font-semibold"
-                    : "hover:bg-blue-600"
+                    ? "bg-white text-primary font-semibold"
+                    : "hover:bg-primary-hover"
                   }`
                 }
               >
@@ -43,7 +43,7 @@ export default function MainLayout() {
         <div className="flex-1" />
 
         {/* User Info */}
-        <div className="mt-6 border-t border-blue-500 pt-4">
+        <div className="mt-6 border-t border-primary-hover pt-4">
           <p className="text-sm opacity-80">{user?.username}</p>
           <p className="text-xs opacity-60 mb-3">{user?.role}</p>
 
@@ -59,11 +59,11 @@ export default function MainLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Topbar (mobile fallback) */}
-        <header className="md:hidden bg-blue-700 text-white px-4 py-3 flex justify-between items-center">
+        <header className="md:hidden bg-primary text-white px-4 py-3 flex justify-between items-center">
           <h1 className="font-semibold">MyPOS</h1>
           <button
             onClick={handleLogout}
-            className="bg-red-500 px-3 py-1 rounded text-sm"
+            className="bg-red-600 px-3 py-1 rounded text-sm"
           >
             Logout
           </button>

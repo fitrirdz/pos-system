@@ -111,7 +111,7 @@ export default function ReceiptModal({ transaction, onClose }: ReceiptModalProps
                     <div className="border-t px-6 py-4 flex gap-3">
                         <button
                             onClick={handlePrint}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold transition"
+                            className="flex-1 bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg font-semibold transition"
                         >
                             Print Receipt
                         </button>

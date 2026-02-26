@@ -96,7 +96,7 @@ export default function NewTransaction() {
                         <button
                             key={product.id}
                             onClick={() => addToCart(product)}
-                            className="border rounded-xl p-4 hover:bg-blue-50 transition text-left"
+                            className="border rounded-xl p-4 hover:bg-primary-light transition text-left"
                         >
                             <p className="font-semibold">{product.name}</p>
                             <p className="text-sm text-gray-500">
@@ -146,7 +146,7 @@ export default function NewTransaction() {
                     <button
                         onClick={() => setShowPaymentModal(true)}
                         disabled={cart.length === 0}
-                        className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-3 rounded-lg font-semibold transition"
+                        className="mt-4 w-full bg-primary hover:bg-primary-hover disabled:bg-gray-300 text-white py-3 rounded-lg font-semibold transition"
                     >
                         Process Payment
                     </button>

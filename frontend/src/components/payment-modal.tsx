@@ -72,7 +72,7 @@ export default function PaymentModal({
                     <button
                         onClick={onConfirm}
                         disabled={!isEnough || loading}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-2 rounded-lg font-semibold"
+                        className="flex-1 bg-primary hover:bg-primary-hover disabled:bg-gray-300 text-white py-2 rounded-lg font-semibold"
                     >
                         {loading ? "Processing..." : "Confirm"}
                     </button>

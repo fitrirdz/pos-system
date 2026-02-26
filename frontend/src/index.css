@@ -31,3 +31,45 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+/* Print Styles for Receipt */
+@media print {
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the print receipt */
+  .print-receipt,
+  .print-receipt * {
+    visibility: visible;
+  }
+
+  /* Position the receipt at the top left */
+  .print-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm; /* Standard receipt paper width */
+    max-width: 100%;
+  }
+
+  /* Receipt content styling */
+  .receipt-content {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 10mm;
+  }
+
+  /* Remove page margins */
+  @page {
+    margin: 0;
+    size: 80mm auto;
+  }
+
+  /* Ensure no page breaks within items */
+  .receipt-content > * {
+    page-break-inside: avoid;
+  }
+}

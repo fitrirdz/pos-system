@@ -11,6 +11,7 @@ export const createTransaction = async (req: Request, res: Response) => {
      * UI belum kirim type juga aman
      */
     const { type = 'SALE', items } = req.body;
+    const userId = (req as any).user.userId;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -106,6 +107,7 @@ export const createTransaction = async (req: Request, res: Response) => {
           discountTotal,
           tax,
           total,
+          userId,
         },
       });
 
@@ -139,9 +141,35 @@ export const createTransaction = async (req: Request, res: Response) => {
       return createdTransaction;
     });
 
+    // Fetch full transaction with cashier info
+    const fullTransaction = await prisma.transaction.findUnique({
+      where: { id: transaction.id },
+      include: {
+        cashier: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                price: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
     return res.status(201).json({
       message: 'Transaction created',
-      data: transaction,
+      data: fullTransaction,
     });
   } catch (error: any) {
     return res.status(400).json({
@@ -157,6 +185,13 @@ export const getTransactions = async (_req: Request, res: Response) => {
   try {
     const transactions = await prisma.transaction.findMany({
       include: {
+        cashier: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
         items: {
           include: {
             product: {
@@ -194,6 +229,13 @@ export const getTransactionById = async (req: Request, res: Response) => {
     const transaction = await prisma.transaction.findUnique({
       where: { id: Array.isArray(id) ? id[0] : id },
       include: {
+        cashier: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
         items: {
           include: {
             product: true,

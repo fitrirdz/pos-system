@@ -8,10 +8,11 @@ generator client {
 }
 
 model User {
-  id       String @id @default(uuid())
-  username String @unique
-  password String
-  role     UserRole @default(ADMIN)
+  id           String        @id @default(uuid())
+  username     String        @unique
+  password     String
+  role         UserRole      @default(ADMIN)
+  transactions Transaction[]
 }
 
 enum UserRole {
@@ -44,6 +45,8 @@ model Transaction {
   discountTotal Int
   tax           Int
   total         Int
+  userId        String
+  cashier       User             @relation(fields: [userId], references: [id])
   createdAt     DateTime         @default(now())
 
   items TransactionItem[]

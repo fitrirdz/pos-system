@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import type { CartItem, Product } from '../interfaces';
+import type { CartItem, Product, Transaction } from '../interfaces';
 import api from '../api/axios';
 import PaymentModal from '../components/payment-modal';
+import ReceiptModal from '../components/receipt-modal';
 import { useToast } from '../context/use-toast';
 
 export default function NewTransaction() {
@@ -9,6 +10,7 @@ export default function NewTransaction() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [transaction, setTransaction] = useState<Transaction | null>(null);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -61,14 +63,17 @@ export default function NewTransaction() {
             };
 
             const response = await api.post("/transactions", payload);
-            const receiptId = response.data.data.id;
+            const transactionData = response.data.data;
 
-            // Reset cart and close modal
+            // Store transaction data
+            setTransaction(transactionData);
+
+            // Reset cart and close payment modal
             setCart([]);
             setShowPaymentModal(false);
 
-            // Show success toast with receipt ID
-            showToast(`Transaction successful! Receipt ID: #${receiptId}`, "success");
+            // Show success toast
+            showToast(`Transaction successful! Receipt ID: #${transactionData.id}`, "success");
         } catch (error) {
             console.error("Transaction failed", error);
             const errorMessage = error instanceof Error ? error.message : "Transaction failed!";
@@ -154,6 +159,13 @@ export default function NewTransaction() {
                     loading={loading}
                     onClose={() => setShowPaymentModal(false)}
                     onConfirm={handleConfirmPayment}
+                />
+            )}
+
+            {transaction && (
+                <ReceiptModal
+                    transaction={transaction}
+                    onClose={() => setTransaction(null)}
                 />
             )}
         </div>

@@ -2,7 +2,7 @@ import api from './axios';
 
 export interface TransactionItem {
   code: string;
-  quantity: number;
+  qty: number;
 }
 
 export interface CreateTransactionPayload {

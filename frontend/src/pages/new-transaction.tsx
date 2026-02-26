@@ -13,7 +13,7 @@ export default function NewTransaction() {
     // Query hooks for data fetching
     const { data: products = [], isLoading: productsLoading } = useProducts();
     const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-    const createTransactionMutation = useCreateTransaction();
+    const {mutateAsync: createTransactionMutation, isPending} = useCreateTransaction();
     
     // Local state
     const [cart, setCart] = useState<CartItem[]>([]);
@@ -58,18 +58,18 @@ export default function NewTransaction() {
 
     const handleConfirmPayment = async () => {
         // Prevent double submit
-        if (createTransactionMutation.isPending) return;
+        if (isPending) return;
 
         try {
             const payload = {
                 type: "SALE" as const,
                 items: cart.map((item) => ({
                     code: item.code,
-                    quantity: item.qty,
+                    qty: item.qty,
                 })),
             };
 
-            const response = await createTransactionMutation.mutateAsync(payload);
+            const response = await createTransactionMutation(payload);
             const transactionData = response.data;
 
             // Store transaction data
@@ -117,7 +117,7 @@ export default function NewTransaction() {
             {showPaymentModal && (
                 <PaymentModal
                     total={total}
-                    loading={createTransactionMutation.isPending}
+                    loading={isPending}
                     onClose={() => setShowPaymentModal(false)}
                     onConfirm={handleConfirmPayment}
                 />

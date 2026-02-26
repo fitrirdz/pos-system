@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import type { CartItem, Product } from '../interfaces';
 import api from '../api/axios';
 import PaymentModal from '../components/payment-modal';
+import { useToast } from '../context/use-toast';
 
 export default function NewTransaction() {
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const { showToast } = useToast();
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -44,6 +46,9 @@ export default function NewTransaction() {
     );
 
     const handleConfirmPayment = async () => {
+        // Prevent double submit
+        if (loading) return;
+
         try {
             setLoading(true);
 
@@ -55,14 +60,19 @@ export default function NewTransaction() {
                 })),
             };
 
-            await api.post("/transactions", payload);
+            const response = await api.post("/transactions", payload);
+            const receiptId = response.data.data.id;
 
+            // Reset cart and close modal
             setCart([]);
             setShowPaymentModal(false);
-            alert("Transaction successful!");
+
+            // Show success toast with receipt ID
+            showToast(`Transaction successful! Receipt ID: #${receiptId}`, "success");
         } catch (error) {
             console.error("Transaction failed", error);
-            alert("Transaction failed!");
+            const errorMessage = error instanceof Error ? error.message : "Transaction failed!";
+            showToast(errorMessage, "error");
         } finally {
             setLoading(false);
         }

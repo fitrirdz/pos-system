@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { CartItem, Product, Transaction } from '../interfaces';
 import PaymentModal from '../components/payment-modal';
 import ReceiptModal from '../components/receipt-modal';
@@ -19,22 +19,31 @@ export default function NewTransaction() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [transaction, setTransaction] = useState<Transaction | null>(null);
+    const [barcodeInput, setBarcodeInput] = useState("");
+    const barcodeRef = useRef<HTMLInputElement>(null);
     const { showToast } = useToast();
+
+    // Auto-focus barcode input when modal is closed
+    useEffect(() => {
+        if (!showPaymentModal && barcodeRef.current) {
+            barcodeRef.current.focus();
+        }
+    }, [showPaymentModal]);
 
     const isLoading = productsLoading || categoriesLoading;
 
-    const addToCart = (product: Product) => {
+    const addToCart = (product: Product): boolean => {
         // Prevent adding out of stock items
         if (product.stock === 0) {
             showToast("Product is out of stock", "error");
-            return;
+            return false;
         }
 
         // Check if item already exists in cart and would exceed stock
         const existing = cart.find((item) => item.code === product.code);
         if (existing && existing.qty >= product.stock) {
             showToast(`Only ${product.stock} items available in stock`, "error");
-            return;
+            return false;
         }
 
         setCart((prev) => {
@@ -50,6 +59,30 @@ export default function NewTransaction() {
 
             return [...prev, { ...product, qty: 1 }];
         });
+        
+        return true;
+    };
+
+    const handleBarcodeSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!barcodeInput.trim()) return;
+
+        // Find product by code
+        const product = products.find((p: Product) => p.code === barcodeInput.trim());
+
+        if (product) {
+            const success = addToCart(product);
+            if (success) {
+                showToast(`Added ${product.name} to cart`, "success");
+            }
+        } else {
+            showToast(`Product with code "${barcodeInput}" not found`, "error");
+        }
+
+        // Clear input and refocus
+        setBarcodeInput("");
+        barcodeRef.current?.focus();
     };
 
     const total = cart.reduce(
@@ -99,7 +132,27 @@ export default function NewTransaction() {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+        <div className="space-y-4 h-full flex flex-col">
+            {/* Barcode Scanner Input */}
+            <form onSubmit={handleBarcodeSubmit} className="flex-shrink-0">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Scan Barcode or Enter Product Code
+                    </label>
+                    <input
+                        ref={barcodeRef}
+                        type="text"
+                        value={barcodeInput}
+                        onChange={(e) => setBarcodeInput(e.target.value)}
+                        placeholder="Scan or type product code..."
+                        className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+                        autoFocus
+                    />
+                </div>
+            </form>
+
+            {/* Main Content */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
             {/* Products */}
             <div className="md:col-span-2">
                 <ProductsCard
@@ -114,6 +167,7 @@ export default function NewTransaction() {
                 cart={cart}
                 onCheckout={() => setShowPaymentModal(true)}
             />
+            </div>
 
             {showPaymentModal && (
                 <PaymentModal

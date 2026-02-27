@@ -23,7 +23,7 @@ export default function ReceiptModal({ transaction, onClose }: ReceiptModalProps
     return (
         <>
             {/* Modal Overlay */}
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:hidden">
+            <div className="fixed -inset-4 bg-black bg-opacity-50 flex items-center justify-center z-50 print:hidden">
                 <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
                     {/* Modal Header */}
                     <div className="border-b px-6 py-4 flex justify-between items-center">

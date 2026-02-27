@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type PaymentModalProps = {
     total: number;
@@ -18,8 +18,22 @@ export default function PaymentModal({
     const change = Math.max(paidAmount - total, 0);
     const isEnough = paidAmount >= total;
 
+    // Keyboard shortcuts: Enter to confirm, ESC to close
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            } else if (e.key === "Enter" && isEnough && !loading) {
+                onConfirm();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isEnough, loading, onClose, onConfirm]);
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed -inset-4 bg-black bg-opacity-40 flex items-center justify-center z-50">
             <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl">
                 <h2 className="text-lg font-semibold mb-4">
                     Payment
@@ -39,12 +53,45 @@ export default function PaymentModal({
                         </label>
                         <input
                             type="number"
+                            value={paidAmount || ''}
                             onChange={(e) =>
                                 setPaidAmount(Number(e.target.value))
                             }
                             className="w-full border rounded-lg px-3 py-2 mt-1"
                             autoFocus
                         />
+                        
+                        {/* Quick cash buttons */}
+                        <div className="grid grid-cols-4 gap-2 mt-2">
+                            <button
+                                type="button"
+                                onClick={() => setPaidAmount((prev) => prev + 10000)}
+                                className="bg-gray-100 hover:bg-gray-200 py-2 rounded-lg text-sm font-medium"
+                            >
+                                10k
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaidAmount((prev) => prev + 20000)}
+                                className="bg-gray-100 hover:bg-gray-200 py-2 rounded-lg text-sm font-medium"
+                            >
+                                20k
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaidAmount((prev) => prev + 50000)}
+                                className="bg-gray-100 hover:bg-gray-200 py-2 rounded-lg text-sm font-medium"
+                            >
+                                50k
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaidAmount(total)}
+                                className="bg-gray-100 hover:bg-gray-200 py-2 rounded-lg text-sm font-medium"
+                            >
+                                Exact
+                            </button>
+                        </div>
                     </div>
 
                     <div className="flex justify-between text-lg font-semibold">

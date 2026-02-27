@@ -19,6 +19,7 @@ export default function NewTransaction() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [transaction, setTransaction] = useState<Transaction | null>(null);
+    const [paymentDetails, setPaymentDetails] = useState<{ paidAmount: number; change: number } | null>(null);
     const [barcodeInput, setBarcodeInput] = useState("");
     const barcodeRef = useRef<HTMLInputElement>(null);
     const { showToast } = useToast();
@@ -90,7 +91,7 @@ export default function NewTransaction() {
         0
     );
 
-    const handleConfirmPayment = async () => {
+    const handleConfirmPayment = async (paidAmount: number, change: number) => {
         // Prevent double submit
         if (isPending) return;
 
@@ -106,8 +107,9 @@ export default function NewTransaction() {
             const response = await createTransactionMutation(payload);
             const transactionData = response.data;
 
-            // Store transaction data
+            // Store transaction data and payment details
             setTransaction(transactionData);
+            setPaymentDetails({ paidAmount, change });
 
             // Reset cart and close payment modal
             setCart([]);
@@ -178,10 +180,15 @@ export default function NewTransaction() {
                 />
             )}
 
-            {transaction && (
+            {transaction && paymentDetails && (
                 <ReceiptModal
                     transaction={transaction}
-                    onClose={() => setTransaction(null)}
+                    paidAmount={paymentDetails.paidAmount}
+                    change={paymentDetails.change}
+                    onClose={() => {
+                        setTransaction(null);
+                        setPaymentDetails(null);
+                    }}
                 />
             )}
         </div>

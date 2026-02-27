@@ -3,10 +3,12 @@ import type { Transaction } from '../interfaces';
 
 interface ReceiptModalProps {
     transaction: Transaction;
+    paidAmount: number;
+    change: number;
     onClose: () => void;
 }
 
-export default function ReceiptModal({ transaction, onClose }: ReceiptModalProps) {
+export default function ReceiptModal({ transaction, paidAmount, change, onClose }: ReceiptModalProps) {
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -99,6 +101,21 @@ export default function ReceiptModal({ transaction, onClose }: ReceiptModalProps
                                 <span>Rp {transaction.total.toLocaleString()}</span>
                             </div>
 
+                            {/* Divider */}
+                            <div className="border-t border-gray-400 my-3"></div>
+
+                            {/* Payment Details */}
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span>Paid Amount</span>
+                                    <span className="font-semibold">Rp {paidAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Change</span>
+                                    <span className="font-semibold">Rp {change.toLocaleString()}</span>
+                                </div>
+                            </div>
+
                             {/* Footer */}
                             <div className="text-center mt-6 text-xs text-gray-500">
                                 <p>Thank you for your purchase!</p>
@@ -186,6 +203,21 @@ export default function ReceiptModal({ transaction, onClose }: ReceiptModalProps
                     <div className="flex justify-between items-center text-lg font-bold">
                         <span>TOTAL</span>
                         <span>Rp {transaction.total.toLocaleString()}</span>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-400 my-3"></div>
+
+                    {/* Payment Details */}
+                    <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                            <span>Paid Amount</span>
+                            <span className="font-semibold">Rp {paidAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Change</span>
+                            <span className="font-semibold">Rp {change.toLocaleString()}</span>
+                        </div>
                     </div>
 
                     {/* Footer */}

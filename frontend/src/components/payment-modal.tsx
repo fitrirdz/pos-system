@@ -4,7 +4,7 @@ type PaymentModalProps = {
     total: number;
     loading: boolean;
     onClose: () => void;
-    onConfirm: () => void;
+    onConfirm: (paidAmount: number, change: number) => void;
 };
 
 export default function PaymentModal({
@@ -24,7 +24,7 @@ export default function PaymentModal({
             if (e.key === "Escape") {
                 onClose();
             } else if (e.key === "Enter" && isEnough && !loading) {
-                onConfirm();
+                onConfirm(paidAmount, change);
             }
         };
 
@@ -117,7 +117,7 @@ export default function PaymentModal({
                     </button>
 
                     <button
-                        onClick={onConfirm}
+                        onClick={() => onConfirm(paidAmount, change)}
                         disabled={!isEnough || loading}
                         className="flex-1 bg-primary hover:bg-primary-hover disabled:bg-gray-300 text-white py-2 rounded-lg font-semibold"
                     >

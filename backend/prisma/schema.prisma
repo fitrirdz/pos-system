@@ -45,6 +45,9 @@ model Transaction {
   discountTotal Int
   tax           Int
   total         Int
+  paymentMethod PaymentMethod?
+  paidAmount    Int?
+  changeGiven   Int              @default(0)
   userId        String
   cashier       User             @relation("UserTransactions", fields: [userId], references: [id])
   createdAt     DateTime         @default(now())
@@ -77,5 +80,13 @@ model Discount {
 enum TransactionType {
   SALE
   STOCK_IN
+}
+
+enum PaymentMethod {
+  CASH
+  DEBIT_CARD
+  CREDIT_CARD
+  QRIS
+  E_WALLET
 }
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import type { CartItem, Product, Transaction } from '../interfaces';
+import type { CartItem, Product, Transaction, PaymentMethod } from '../interfaces';
 import PaymentModal from '../components/payment-modal';
 import ReceiptModal from '../components/receipt-modal';
 import ProductsCard from '../components/products-card';
@@ -91,7 +91,7 @@ export default function NewTransaction() {
         0
     );
 
-    const handleConfirmPayment = async (paidAmount: number, change: number) => {
+    const handleConfirmPayment = async (paymentMethod: PaymentMethod, paidAmount: number, change: number) => {
         // Prevent double submit
         if (isPending) return;
 
@@ -102,6 +102,8 @@ export default function NewTransaction() {
                     code: item.code,
                     qty: item.qty,
                 })),
+                paymentMethod,
+                paidAmount,
             };
 
             const response = await createTransactionMutation(payload);

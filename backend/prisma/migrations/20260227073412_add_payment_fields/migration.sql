@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `Transaction` ADD COLUMN `changeGiven` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `paidAmount` INTEGER NULL,
+    ADD COLUMN `paymentMethod` ENUM('CASH', 'DEBIT_CARD', 'CREDIT_CARD', 'QRIS', 'E_WALLET') NULL;

@@ -10,12 +10,19 @@ export const createTransaction = async (req: Request, res: Response) => {
      * Default type = SALE
      * UI belum kirim type juga aman
      */
-    const { type = 'SALE', items } = req.body;
+    const { type = 'SALE', items, paymentMethod, paidAmount } = req.body;
     const userId = (req as any).user.userId;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
         message: 'Items is required',
+      });
+    }
+
+    // Validate payment fields for SALE transactions
+    if (type === 'SALE' && (!paymentMethod || !paidAmount)) {
+      return res.status(400).json({
+        message: 'Payment method and paid amount are required for SALE transactions',
       });
     }
 
@@ -98,7 +105,17 @@ export const createTransaction = async (req: Request, res: Response) => {
       }
 
       /**
-       * 6️⃣ Create transaction
+       * 6️⃣ Calculate change (for SALE transactions)
+       */
+      const changeGiven = type === 'SALE' && paidAmount ? paidAmount - total : 0;
+
+      // Validate paid amount is sufficient for SALE
+      if (type === 'SALE' && paidAmount < total) {
+        throw new Error(`Insufficient payment. Total: ${total}, Paid: ${paidAmount}`);
+      }
+
+      /**
+       * 7️⃣ Create transaction
        */
       const createdTransaction = await tx.transaction.create({
         data: {
@@ -107,12 +124,15 @@ export const createTransaction = async (req: Request, res: Response) => {
           discountTotal,
           tax,
           total,
+          paymentMethod: type === 'SALE' ? paymentMethod : null,
+          paidAmount: type === 'SALE' ? paidAmount : null,
+          changeGiven,
           userId,
         },
       });
 
       /**
-       * 7️⃣ Create items + update stock
+       * 8️⃣ Create items + update stock
        */
       for (const item of items) {
         const product = productMap.get(item.code)!;

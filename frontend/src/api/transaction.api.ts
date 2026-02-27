@@ -1,4 +1,5 @@
 import api from './axios';
+import type { PaymentMethod } from '../interfaces';
 
 export interface TransactionItem {
   code: string;
@@ -8,6 +9,8 @@ export interface TransactionItem {
 export interface CreateTransactionPayload {
   type: 'STOCK_IN' | 'SALE';
   items: TransactionItem[];
+  paymentMethod?: PaymentMethod;
+  paidAmount?: number;
 }
 
 export const createTransaction = async (data: CreateTransactionPayload) => {

@@ -40,6 +40,8 @@ export interface TransactionItem {
   };
 }
 
+export type PaymentMethod = 'CASH' | 'DEBIT_CARD' | 'CREDIT_CARD' | 'QRIS' | 'E_WALLET';
+
 export interface Transaction {
   id: string;
   type: string;
@@ -47,6 +49,9 @@ export interface Transaction {
   discountTotal: number;
   tax: number;
   total: number;
+  paymentMethod?: PaymentMethod | null;
+  paidAmount?: number | null;
+  changeGiven: number;
   userId: string;
   cashier: User;
   createdAt: string;

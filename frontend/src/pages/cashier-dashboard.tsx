@@ -98,7 +98,6 @@ export default function CashierDashboard() {
               {formatCurrency(stats?.totalSalesToday || 0)}
             </h2>
           )}
-          <p className='text-xs text-gray-400 mt-2'>Updates every 30 seconds</p>
         </div>
 
         <div className='bg-white p-6 rounded-xl shadow'>
@@ -153,7 +152,9 @@ export default function CashierDashboard() {
                   className='flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg'
                 >
                   <div>
-                    <p className='font-medium text-yellow-900'>{product.name}</p>
+                    <p className='font-medium text-yellow-900'>
+                      {product.name}
+                    </p>
                     <p className='text-sm text-yellow-600'>
                       Code: {product.code}
                     </p>

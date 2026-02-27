@@ -12,7 +12,7 @@ model User {
   username     String        @unique
   password     String
   role         UserRole      @default(ADMIN)
-  transactions Transaction[]
+  transactions Transaction[] @relation("UserTransactions")
 }
 
 enum UserRole {
@@ -46,7 +46,7 @@ model Transaction {
   tax           Int
   total         Int
   userId        String
-  cashier       User             @relation(fields: [userId], references: [id])
+  cashier       User             @relation("UserTransactions", fields: [userId], references: [id])
   createdAt     DateTime         @default(now())
 
   items TransactionItem[]

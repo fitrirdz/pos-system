@@ -86,11 +86,37 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       },
     });
 
+    // Get recent transactions (latest 5)
+    const transactionsWithCashier = await prisma.transaction.findMany({
+      take: 5,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Manually fetch cashier info for each transaction
+    const recentTransactions = await Promise.all(
+      transactionsWithCashier.map(async (transaction: any) => {
+        const cashier = await prisma.user.findUnique({
+          where: { id: transaction.userId },
+          select: { username: true },
+        });
+        return {
+          id: transaction.id,
+          type: transaction.type,
+          total: transaction.total,
+          createdAt: transaction.createdAt,
+          cashier: { username: cashier?.username || 'Unknown' },
+        };
+      }),
+    );
+
     return res.json({
       totalSalesToday,
       totalTransactionsToday,
       lowStockProducts,
       outOfStockProducts,
+      recentTransactions,
     });
   } catch (error) {
     console.error(error);

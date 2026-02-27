@@ -16,6 +16,7 @@ export const useTransactions = () => {
     queryKey: TRANSACTIONS_QUERY_KEY,
     queryFn: getTransactions,
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+    refetchIntervalInBackground: false, // Don't poll when tab is hidden
   });
 };
 

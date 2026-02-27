@@ -15,5 +15,6 @@ export const useDashboardStats = () => {
     queryKey: DASHBOARD_STATS_QUERY_KEY,
     queryFn: getDashboardStats,
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+    refetchIntervalInBackground: false, // Don't poll when tab is hidden
   });
 };

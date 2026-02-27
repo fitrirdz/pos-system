@@ -25,6 +25,15 @@ export interface DashboardStats {
       name: string;
     };
   }>;
+  recentTransactions: Array<{
+    id: string;
+    type: string;
+    total: number;
+    createdAt: string;
+    cashier: {
+      username: string;
+    };
+  }>;
 }
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {

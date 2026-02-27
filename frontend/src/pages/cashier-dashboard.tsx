@@ -43,6 +43,17 @@ export default function CashierDashboard() {
     };
   };
 
+  // Format transaction time
+  const formatTransactionTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
   const { date, time } = formatDateTime(currentTime);
 
   return (
@@ -162,6 +173,50 @@ export default function CashierDashboard() {
             <div className='text-sm text-green-600 bg-green-50 p-4 rounded-lg'>
               ✅ All products are well stocked!
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Recent Transactions */}
+      <div className='bg-white p-6 rounded-xl shadow'>
+        <h2 className='text-lg font-semibold mb-4'>📋 Recent Transactions</h2>
+        {isLoading ? (
+          <div className='text-sm text-gray-500'>Loading...</div>
+        ) : (stats?.recentTransactions.length || 0) > 0 ? (
+          <div className='space-y-3'>
+            {stats?.recentTransactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className='flex justify-between items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition'
+              >
+                <div className='flex-1'>
+                  <p className='text-sm text-gray-500'>
+                    {formatTransactionTime(transaction.createdAt)}
+                  </p>
+                  <p className='text-sm font-medium text-gray-700 mt-1'>
+                    Cashier: {transaction.cashier.username}
+                  </p>
+                </div>
+                <div className='text-right'>
+                  <p className='text-lg font-bold text-green-600'>
+                    {formatCurrency(transaction.total)}
+                  </p>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      transaction.type === 'SALE'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {transaction.type}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className='text-sm text-gray-500 bg-gray-50 p-4 rounded-lg'>
+            No transactions yet
           </div>
         )}
       </div>

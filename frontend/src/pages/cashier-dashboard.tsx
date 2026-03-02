@@ -137,9 +137,8 @@ export default function CashierDashboard() {
                 >
                   <div>
                     <p className='font-medium text-red-900'>{product.name}</p>
-                    <p className='text-sm text-red-600'>Code: {product.code}</p>
                   </div>
-                  <div className='text-right'>
+                  <div className='text-right w-36'>
                     <span className='bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold'>
                       OUT OF STOCK
                     </span>

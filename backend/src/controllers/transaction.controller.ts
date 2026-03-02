@@ -211,7 +211,7 @@ export const getTransactions = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
     const userRole = (req as any).user.role;
-    const { cashierId } = req.query;
+    const { userId: queryUserId } = req.query;
 
     // Build where clause based on role
     const whereClause: any = {};
@@ -219,9 +219,9 @@ export const getTransactions = async (req: Request, res: Response) => {
     if (userRole === 'CASHIER') {
       // Cashiers can only see their own transactions
       whereClause.userId = userId;
-    } else if (userRole === 'ADMIN' && cashierId) {
-      // Admin can filter by specific cashier
-      whereClause.userId = cashierId as string;
+    } else if (userRole === 'ADMIN' && queryUserId) {
+      // Admin can filter by specific user
+      whereClause.userId = queryUserId as string;
     }
 
     const transactions = await prisma.transaction.findMany({

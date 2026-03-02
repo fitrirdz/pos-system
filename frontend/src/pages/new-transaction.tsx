@@ -15,7 +15,7 @@ export default function NewTransaction() {
     const { data: categories = [], isLoading: categoriesLoading } = useCategories();
     const {mutateAsync: createTransactionMutation, isPending} = useCreateTransaction();
     
-    // Local state
+    // Local state 
     const [cart, setCart] = useState<CartItem[]>([]);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [transaction, setTransaction] = useState<Transaction | null>(null);
@@ -62,6 +62,35 @@ export default function NewTransaction() {
         });
         
         return true;
+    };
+
+    const updateQuantity = (code: string, newQty: number) => {
+        // Find the product to check stock
+        const product = products.find((p: Product) => p.code === code);
+        
+        if (!product) return;
+
+        // Prevent negative or zero quantities
+        if (newQty <= 0) {
+            showToast("Quantity must be at least 1", "error");
+            return;
+        }
+
+        // Check if new quantity exceeds stock
+        if (newQty > product.stock) {
+            showToast(`Only ${product.stock} items available in stock`, "error");
+            return;
+        }
+
+        setCart((prev) =>
+            prev.map((item) =>
+                item.code === code ? { ...item, qty: newQty } : item
+            )
+        );
+    };
+
+    const removeFromCart = (code: string) => {
+        setCart((prev) => prev.filter((item) => item.code !== code));
     };
 
     const handleBarcodeSubmit = (e: React.FormEvent) => {
@@ -170,6 +199,8 @@ export default function NewTransaction() {
             <Cart
                 cart={cart}
                 onCheckout={() => setShowPaymentModal(true)}
+                onUpdateQuantity={updateQuantity}
+                onRemove={removeFromCart}
             />
             </div>
 

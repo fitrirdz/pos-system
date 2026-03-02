@@ -5,11 +5,9 @@ import type { Transaction, PaymentMethod } from '../interfaces';
 
 export default function TransactionHistory() {
   const { data: transactions, isLoading } = useTransactions();
-  const [dateFilter, setDateFilter] = useState<'today' | 'custom'>('today');
-  const [customDate, setCustomDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchId, setSearchId] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-console.log('ini transactions: ', transactions);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -44,21 +42,13 @@ console.log('ini transactions: ', transactions);
     let filtered = [...transactions];
 
     // Filter by date
-    if (dateFilter === 'today') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    if (selectedDate) {
+      const filterDate = new Date(selectedDate);
+      filterDate.setHours(0, 0, 0, 0);
       filtered = filtered.filter((t) => {
         const transactionDate = new Date(t.createdAt);
         transactionDate.setHours(0, 0, 0, 0);
-        return transactionDate.getTime() === today.getTime();
-      });
-    } else if (dateFilter === 'custom' && customDate) {
-      const selectedDate = new Date(customDate);
-      selectedDate.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((t) => {
-        const transactionDate = new Date(t.createdAt);
-        transactionDate.setHours(0, 0, 0, 0);
-        return transactionDate.getTime() === selectedDate.getTime();
+        return transactionDate.getTime() === filterDate.getTime();
       });
     }
 
@@ -73,7 +63,7 @@ console.log('ini transactions: ', transactions);
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return filtered;
-  }, [transactions, dateFilter, customDate, searchId]);
+  }, [transactions, selectedDate, searchId]);
 
   // Handle view receipt
   const handleViewReceipt = (transaction: Transaction) => {
@@ -81,7 +71,7 @@ console.log('ini transactions: ', transactions);
   };
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-4'>
       {/* Header */}
       <div className='bg-white p-6 rounded-xl shadow'>
         <h1 className='text-2xl font-bold'>📋 Transaction History</h1>
@@ -92,64 +82,33 @@ console.log('ini transactions: ', transactions);
       <div className='bg-white p-6 rounded-xl shadow space-y-4'>
         <h2 className='text-lg font-semibold'>Filters</h2>
 
-        {/* Date Filter */}
         <div className='flex flex-col md:flex-row gap-4'>
-          <div className='flex-1'>
+          {/* Search by ID - 3/4 width */}
+          <div className='flex-[3]'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
+              Search by Transaction ID
+            </label>
+            <input
+              type='text'
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value)}
+              placeholder='Enter transaction ID...'
+              className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
+            />
+          </div>
+
+          {/* Date Filter - 1/4 width */}
+          <div className='flex-[1]'>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
               Filter by Date
             </label>
-            <div className='flex gap-3'>
-              <button
-                onClick={() => setDateFilter('today')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  dateFilter === 'today'
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Today
-              </button>
-              <button
-                onClick={() => setDateFilter('custom')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  dateFilter === 'custom'
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Custom Date
-              </button>
-            </div>
+            <input
+              type='date'
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
+            />
           </div>
-
-          {/* Custom Date Picker */}
-          {dateFilter === 'custom' && (
-            <div className='flex-1'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Select Date
-              </label>
-              <input
-                type='date'
-                value={customDate}
-                onChange={(e) => setCustomDate(e.target.value)}
-                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Search by ID */}
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>
-            Search by Transaction ID
-          </label>
-          <input
-            type='text'
-            value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
-            placeholder='Enter transaction ID...'
-            className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
-          />
         </div>
       </div>
 
@@ -223,9 +182,7 @@ console.log('ini transactions: ', transactions);
           <div className='text-center py-12 bg-gray-50 rounded-lg'>
             <p className='text-gray-500 text-lg'>No transactions found</p>
             <p className='text-gray-400 text-sm mt-2'>
-              {dateFilter === 'today'
-                ? 'No transactions for today yet'
-                : 'Try adjusting your filters'}
+              Try adjusting your filters
             </p>
           </div>
         )}

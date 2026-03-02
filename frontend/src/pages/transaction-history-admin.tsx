@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTransactions } from '../hooks/use-transactions';
 import ReceiptModal from '../components/receipt-modal';
 import type { Transaction, PaymentMethod, User } from '../interfaces';
@@ -6,17 +6,23 @@ import { useUsers } from '../hooks/use-users';
 
 export default function TransactionHistoryAdmin() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [selectedType, setSelectedType] = useState<string>('');
-  const { data: transactions, isLoading } = useTransactions(
-    selectedUserId || undefined,
-  );
-  const { data: users, isLoading: isLoadingUsers } = useUsers();
+  const [selectedType, setSelectedType] = useState<'' | 'SALE' | 'STOCK_IN'>('');
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0],
   );
   const [searchId, setSearchId] = useState('');
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+
+  // Fetch transactions with backend filtering
+  const { data: transactions, isLoading } = useTransactions({
+    userId: selectedUserId || undefined,
+    date: selectedDate || undefined,
+    search: searchId || undefined,
+    type: selectedType || undefined,
+  });
+
+  const { data: users, isLoading: isLoadingUsers } = useUsers();
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -43,44 +49,6 @@ export default function TransactionHistoryAdmin() {
     if (!method) return 'N/A';
     return method.replace(/_/g, ' ');
   };
-
-  // Filter transactions
-  const filteredTransactions = useMemo(() => {
-    if (!transactions) return [];
-
-    let filtered = [...transactions];
-
-    // Filter by date
-    if (selectedDate) {
-      const filterDate = new Date(selectedDate);
-      filterDate.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((t) => {
-        const transactionDate = new Date(t.createdAt);
-        transactionDate.setHours(0, 0, 0, 0);
-        return transactionDate.getTime() === filterDate.getTime();
-      });
-    }
-
-    // Filter by search ID
-    if (searchId.trim()) {
-      filtered = filtered.filter((t) =>
-        t.id.toLowerCase().includes(searchId.toLowerCase()),
-      );
-    }
-
-    // Filter by type
-    if (selectedType) {
-      filtered = filtered.filter((t) => t.type === selectedType);
-    }
-
-    // Sort by date (newest first)
-    filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-
-    return filtered;
-  }, [transactions, selectedDate, searchId, selectedType]);
 
   // Handle view receipt
   const handleViewReceipt = (transaction: Transaction) => {
@@ -157,7 +125,7 @@ export default function TransactionHistoryAdmin() {
               </label>
               <select
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                onChange={(e) => setSelectedType(e.target.value as '' | 'SALE' | 'STOCK_IN')}
                 className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
               >
                 <option value=''>All Types</option>
@@ -173,7 +141,7 @@ export default function TransactionHistoryAdmin() {
       <div className='bg-white p-6 rounded-xl shadow'>
         <div className='flex justify-between items-center mb-4'>
           <h2 className='text-lg font-semibold'>
-            Transactions ({filteredTransactions.length})
+            Transactions ({transactions?.length || 0})
           </h2>
         </div>
 
@@ -182,9 +150,9 @@ export default function TransactionHistoryAdmin() {
             <div className='inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
             <p className='text-gray-500 mt-4'>Loading transactions...</p>
           </div>
-        ) : filteredTransactions.length > 0 ? (
+        ) : transactions && transactions.length > 0 ? (
           <div className='space-y-3'>
-            {filteredTransactions.map((transaction) => (
+            {transactions.map((transaction: Transaction) => (
               <div
                 key={transaction.id}
                 className='flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition gap-4'

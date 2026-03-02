@@ -205,13 +205,24 @@ export const createTransaction = async (req: Request, res: Response) => {
 /**
  * Get transaction history
  * - CASHIER: Only see their own transactions
- * - ADMIN: See all transactions, with optional filter by cashier
+ * - ADMIN: See all transactions, with optional filters
+ * 
+ * Query parameters:
+ * - userId: Filter by specific user (admin only)
+ * - date: Filter by specific date (YYYY-MM-DD)
+ * - search: Search by transaction ID (partial match)
+ * - type: Filter by transaction type (SALE or STOCK_IN)
  */
 export const getTransactions = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
     const userRole = (req as any).user.role;
-    const { userId: queryUserId } = req.query;
+    const { 
+      userId: queryUserId, 
+      date, 
+      search, 
+      type 
+    } = req.query;
 
     // Build where clause based on role
     const whereClause: any = {};
@@ -222,6 +233,34 @@ export const getTransactions = async (req: Request, res: Response) => {
     } else if (userRole === 'ADMIN' && queryUserId) {
       // Admin can filter by specific user
       whereClause.userId = queryUserId as string;
+    }
+
+    // Filter by date
+    if (date && typeof date === 'string') {
+      const filterDate = new Date(date);
+      const startOfDay = new Date(filterDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(filterDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      whereClause.createdAt = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+    }
+
+    // Filter by transaction ID (partial search)
+    if (search && typeof search === 'string') {
+      whereClause.id = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    // Filter by transaction type
+    if (type && typeof type === 'string' && (type === 'SALE' || type === 'STOCK_IN')) {
+      whereClause.type = type;
     }
 
     const transactions = await prisma.transaction.findMany({

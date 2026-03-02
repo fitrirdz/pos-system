@@ -10,7 +10,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.post('/', requireRole(['ADMIN']), createCategory);
-router.get('/', getCategories);
+router.post('/', authMiddleware, requireRole(['ADMIN']), createCategory);
+router.get('/', authMiddleware, getCategories);
 
 export default router;

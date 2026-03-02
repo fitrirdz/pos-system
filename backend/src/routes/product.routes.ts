@@ -13,10 +13,10 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.post('/', requireRole(['ADMIN']), createProduct);
-router.get('/', getProducts);
-router.get('/:id', getProductById);
-router.put('/:id', updateProduct);
-router.delete('/:id', deleteProduct);
+router.post('/', authMiddleware, requireRole(['ADMIN']), createProduct);
+router.get('/', authMiddleware, getProducts);
+router.get('/:id', authMiddleware, getProductById);
+router.put('/:id', authMiddleware, requireRole(['ADMIN']), updateProduct);
+router.delete('/:id', authMiddleware, requireRole(['ADMIN']), deleteProduct);
 
 export default router;

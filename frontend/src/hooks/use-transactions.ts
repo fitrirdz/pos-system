@@ -10,11 +10,14 @@ export const TRANSACTIONS_QUERY_KEY = ['transactions'];
 
 /**
  * Hook to fetch all transactions
+ * @param userId - Optional user ID to filter transactions (admin only)
  */
-export const useTransactions = () => {
+export const useTransactions = (userId?: string) => {
   return useQuery({
-    queryKey: TRANSACTIONS_QUERY_KEY,
-    queryFn: getTransactions,
+    queryKey: userId
+      ? [...TRANSACTIONS_QUERY_KEY, userId]
+      : TRANSACTIONS_QUERY_KEY,
+    queryFn: () => getTransactions(userId),
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
     refetchIntervalInBackground: false, // Don't poll when tab is hidden
   });

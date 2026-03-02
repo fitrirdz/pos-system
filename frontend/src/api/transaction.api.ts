@@ -18,7 +18,8 @@ export const createTransaction = async (data: CreateTransactionPayload) => {
   return res.data;
 };
 
-export const getTransactions = async () => {
-  const res = await api.get('/transactions');
+export const getTransactions = async (userId?: string) => {
+  const params = userId ? { userId } : {};
+  const res = await api.get('/transactions', { params });
   return res.data;
 };

@@ -229,9 +229,7 @@ export const getTransactions = async (_req: Request, res: Response) => {
       },
     });
 
-    return res.json({
-      data: transactions,
-    });
+    return res.status(200).json(transactions);
   } catch (error) {
     return res.status(500).json({
       message: 'Failed to fetch transactions',

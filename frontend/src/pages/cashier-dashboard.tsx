@@ -84,7 +84,7 @@ export default function CashierDashboard() {
           className='bg-white text-primary font-bold px-8 py-4 rounded-xl text-lg hover:bg-gray-100 transition'
         >
           + New Sale
-        </button>
+        </button> 
       </div>
 
       {/* Summary Cards */}

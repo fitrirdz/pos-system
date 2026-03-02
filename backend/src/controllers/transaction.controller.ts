@@ -22,7 +22,8 @@ export const createTransaction = async (req: Request, res: Response) => {
     // Validate payment fields for SALE transactions
     if (type === 'SALE' && (!paymentMethod || !paidAmount)) {
       return res.status(400).json({
-        message: 'Payment method and paid amount are required for SALE transactions',
+        message:
+          'Payment method and paid amount are required for SALE transactions',
       });
     }
 
@@ -107,11 +108,14 @@ export const createTransaction = async (req: Request, res: Response) => {
       /**
        * 6️⃣ Calculate change (for SALE transactions)
        */
-      const changeGiven = type === 'SALE' && paidAmount ? paidAmount - total : 0;
+      const changeGiven =
+        type === 'SALE' && paidAmount ? paidAmount - total : 0;
 
       // Validate paid amount is sufficient for SALE
       if (type === 'SALE' && paidAmount < total) {
-        throw new Error(`Insufficient payment. Total: ${total}, Paid: ${paidAmount}`);
+        throw new Error(
+          `Insufficient payment. Total: ${total}, Paid: ${paidAmount}`,
+        );
       }
 
       /**
@@ -200,10 +204,28 @@ export const createTransaction = async (req: Request, res: Response) => {
 
 /**
  * Get transaction history
+ * - CASHIER: Only see their own transactions
+ * - ADMIN: See all transactions, with optional filter by cashier
  */
-export const getTransactions = async (_req: Request, res: Response) => {
+export const getTransactions = async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).user.userId;
+    const userRole = (req as any).user.role;
+    const { cashierId } = req.query;
+
+    // Build where clause based on role
+    const whereClause: any = {};
+
+    if (userRole === 'CASHIER') {
+      // Cashiers can only see their own transactions
+      whereClause.userId = userId;
+    } else if (userRole === 'ADMIN' && cashierId) {
+      // Admin can filter by specific cashier
+      whereClause.userId = cashierId as string;
+    }
+
     const transactions = await prisma.transaction.findMany({
+      where: whereClause,
       include: {
         cashier: {
           select: {

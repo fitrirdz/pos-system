@@ -271,7 +271,7 @@ export default function AdminProductsPage() {
                 <th className='py-3 font-semibold'>Name</th>
                 <th className='py-3 font-semibold'>Price</th>
                 <th className='py-3 font-semibold'>Stock</th>
-                <th className='py-3 font-semibold'>Action</th>
+                <th className='py-3 font-semibold w-44'>Action</th>
               </tr>
             </thead>
             <tbody>

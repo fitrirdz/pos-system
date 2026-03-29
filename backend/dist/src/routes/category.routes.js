@@ -6,6 +6,6 @@ const category_controller_1 = require("../controllers/category.controller");
 const admin_middleware_1 = require("../middlewares/admin.middleware");
 const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authMiddleware);
-router.post('/', (0, admin_middleware_1.requireRole)(['ADMIN']), category_controller_1.createCategory);
-router.get('/', category_controller_1.getCategories);
+router.post('/', auth_middleware_1.authMiddleware, (0, admin_middleware_1.requireRole)(['ADMIN']), category_controller_1.createCategory);
+router.get('/', auth_middleware_1.authMiddleware, category_controller_1.getCategories);
 exports.default = router;

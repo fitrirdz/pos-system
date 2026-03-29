@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 
 /**
@@ -46,16 +47,78 @@ export async function createProduct(req: Request, res: Response) {
 /**
  * GET ALL PRODUCTS
  */
-export async function getProducts(_: Request, res: Response) {
+export async function getProducts(req: Request, res: Response) {
   try {
-    const products = await prisma.product.findMany({
-      orderBy: { name: 'asc' },
-      include: {
-        category: true,
+    const pageQuery = Array.isArray(req.query.page)
+      ? req.query.page[0]
+      : req.query.page;
+    const limitQuery = Array.isArray(req.query.limit)
+      ? req.query.limit[0]
+      : req.query.limit;
+    const searchQuery = Array.isArray(req.query.search)
+      ? req.query.search[0]
+      : req.query.search;
+
+    const hasQueryFilters =
+      pageQuery !== undefined ||
+      limitQuery !== undefined ||
+      (typeof searchQuery === 'string' && searchQuery.trim() !== '');
+
+    // Backward compatible response for existing consumers that expect full array.
+    if (!hasQueryFilters) {
+      const products = await prisma.product.findMany({
+        orderBy: { name: 'asc' },
+        include: {
+          category: true,
+        },
+      });
+
+      return res.status(200).json(products);
+    }
+
+    const parsedPage = Number(pageQuery);
+    const parsedLimit = Number(limitQuery);
+
+    const page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+    const limitBase =
+      Number.isNaN(parsedLimit) || parsedLimit < 1 ? 10 : parsedLimit;
+    const limit = Math.min(limitBase, 100);
+    const search = typeof searchQuery === 'string' ? searchQuery.trim() : '';
+
+    const where: Prisma.ProductWhereInput = search
+      ? {
+          OR: [
+            { code: { contains: search } },
+            { name: { contains: search } },
+          ],
+        }
+      : {};
+
+    const [total, products] = await prisma.$transaction([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          category: true,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    return res.status(200).json({
+      data: products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
       },
     });
 
-    return res.status(200).json(products);
   } catch (error) {
     console.error(error);
     return res.status(500).json({

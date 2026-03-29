@@ -49,15 +49,66 @@ async function createProduct(req, res) {
 /**
  * GET ALL PRODUCTS
  */
-async function getProducts(_, res) {
+async function getProducts(req, res) {
     try {
-        const products = await prisma_1.default.product.findMany({
-            orderBy: { name: 'asc' },
-            include: {
-                category: true,
+        const pageQuery = Array.isArray(req.query.page)
+            ? req.query.page[0]
+            : req.query.page;
+        const limitQuery = Array.isArray(req.query.limit)
+            ? req.query.limit[0]
+            : req.query.limit;
+        const searchQuery = Array.isArray(req.query.search)
+            ? req.query.search[0]
+            : req.query.search;
+        const hasQueryFilters = pageQuery !== undefined ||
+            limitQuery !== undefined ||
+            (typeof searchQuery === 'string' && searchQuery.trim() !== '');
+        // Backward compatible response for existing consumers that expect full array.
+        if (!hasQueryFilters) {
+            const products = await prisma_1.default.product.findMany({
+                orderBy: { name: 'asc' },
+                include: {
+                    category: true,
+                },
+            });
+            return res.status(200).json(products);
+        }
+        const parsedPage = Number(pageQuery);
+        const parsedLimit = Number(limitQuery);
+        const page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+        const limitBase = Number.isNaN(parsedLimit) || parsedLimit < 1 ? 10 : parsedLimit;
+        const limit = Math.min(limitBase, 100);
+        const search = typeof searchQuery === 'string' ? searchQuery.trim() : '';
+        const where = search
+            ? {
+                OR: [
+                    { code: { contains: search } },
+                    { name: { contains: search } },
+                ],
+            }
+            : {};
+        const [total, products] = await prisma_1.default.$transaction([
+            prisma_1.default.product.count({ where }),
+            prisma_1.default.product.findMany({
+                where,
+                orderBy: { name: 'asc' },
+                skip: (page - 1) * limit,
+                take: limit,
+                include: {
+                    category: true,
+                },
+            }),
+        ]);
+        const totalPages = Math.max(1, Math.ceil(total / limit));
+        return res.status(200).json({
+            data: products,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages,
             },
         });
-        return res.status(200).json(products);
     }
     catch (error) {
         console.error(error);

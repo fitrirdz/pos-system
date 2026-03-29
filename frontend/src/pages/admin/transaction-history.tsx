@@ -1,18 +1,28 @@
 import { useState } from 'react';
-import { useTransactions } from '../hooks/use-transactions';
-import ReceiptModal from '../components/receipt-modal';
-import type { Transaction, PaymentMethod } from '../interfaces';
+import { useTransactions } from '../../hooks/use-transactions';
+import ReceiptModal from '../../components/receipt-modal';
+import type { Transaction, PaymentMethod, User } from '../../interfaces';
+import { useUsers } from '../../hooks/use-users';
 
-export default function TransactionHistoryCashier() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+export default function TransactionHistoryAdmin() {
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<'' | 'SALE' | 'STOCK_IN'>('');
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0],
+  );
   const [searchId, setSearchId] = useState('');
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
 
   // Fetch transactions with backend filtering
   const { data: transactions, isLoading } = useTransactions({
+    userId: selectedUserId || undefined,
     date: selectedDate || undefined,
     search: searchId || undefined,
+    type: selectedType || undefined,
   });
+
+  const { data: users, isLoading: isLoadingUsers } = useUsers();
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -49,40 +59,80 @@ export default function TransactionHistoryCashier() {
     <div className='space-y-4'>
       {/* Header */}
       <div className='bg-white p-6 rounded-xl shadow'>
-        <h1 className='text-2xl font-bold'>📋 My Transaction History</h1>
-        <p className='text-gray-500 mt-2'>View your completed transactions</p>
+        <h1 className='text-2xl font-bold'>📋 All Transaction History</h1>
+        <p className='text-gray-500 mt-2'>View and manage all transactions</p>
       </div>
 
       {/* Filters */}
       <div className='bg-white p-6 rounded-xl shadow space-y-4'>
         <h2 className='text-lg font-semibold'>Filters</h2>
 
-        <div className='flex flex-col md:flex-row gap-4'>
-          {/* Search by ID - 3/4 width */}
-          <div className='flex-[3]'>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Search by Transaction ID
-            </label>
-            <input
-              type='text'
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              placeholder='Enter transaction ID...'
-              className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
-            />
+        <div className='flex flex-col gap-4'>
+          {/* First row: Search and Date */}
+          <div className='flex flex-col md:flex-row gap-4'>
+            {/* Search by ID - 3/4 width */}
+            <div className='flex-[3]'>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Search by Transaction ID
+              </label>
+              <input
+                type='text'
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value)}
+                placeholder='Enter transaction ID...'
+                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
+              />
+            </div>
+
+            {/* Date Filter - 1/4 width */}
+            <div className='flex-[1]'>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Filter by Date
+              </label>
+              <input
+                type='date'
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
+              />
+            </div>
           </div>
 
-          {/* Date Filter - 1/4 width */}
-          <div className='flex-[1]'>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Filter by Date
-            </label>
-            <input
-              type='date'
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
-            />
+          {/* Second row: Cashier and Type filters */}
+          <div className='flex flex-col md:flex-row gap-4'>
+            <div className='flex-1'>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Filter by User
+              </label>
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
+                disabled={isLoadingUsers}
+              >
+                <option value=''>All Users</option>
+                {users?.map((user: User) => (
+                  <option key={user.id} value={user.id}>
+                    {user.username} ({user.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className='flex-1'>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Filter by Type
+              </label>
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value as '' | 'SALE' | 'STOCK_IN')}
+                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
+              >
+                <option value=''>All Types</option>
+                <option value='SALE'>Sale</option>
+                <option value='STOCK_IN'>Stock In</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -107,12 +157,22 @@ export default function TransactionHistoryCashier() {
                 key={transaction.id}
                 className='flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition gap-4'
               >
-                <div className='flex-1 grid grid-cols-1 md:grid-cols-4 gap-3'>
+                <div className='flex-1 grid grid-cols-1 md:grid-cols-5 gap-3'>
                   {/* Transaction ID */}
                   <div>
-                    <p className='text-xs text-gray-500 mb-1'>🆔 Transaction ID</p>
+                    <p className='text-xs text-gray-500 mb-1'>
+                      🆔 Transaction ID
+                    </p>
                     <p className='text-sm font-mono font-medium text-gray-900'>
                       {transaction.id}
+                    </p>
+                  </div>
+
+                  {/* Cashier */}
+                  <div>
+                    <p className='text-xs text-gray-500 mb-1'>👤 Cashier</p>
+                    <p className='text-sm font-medium text-gray-900'>
+                      {transaction.cashier.username}
                     </p>
                   </div>
 
@@ -134,7 +194,9 @@ export default function TransactionHistoryCashier() {
 
                   {/* Payment Method */}
                   <div>
-                    <p className='text-xs text-gray-500 mb-1'>💳 Payment Method</p>
+                    <p className='text-xs text-gray-500 mb-1'>
+                      💳 Payment Method
+                    </p>
                     <p className='text-sm font-medium text-gray-900 capitalize'>
                       {formatPaymentMethod(transaction.paymentMethod)}
                     </p>
@@ -167,7 +229,9 @@ export default function TransactionHistoryCashier() {
       {selectedTransaction && (
         <ReceiptModal
           transaction={selectedTransaction}
-          paidAmount={selectedTransaction.paidAmount || selectedTransaction.total}
+          paidAmount={
+            selectedTransaction.paidAmount || selectedTransaction.total
+          }
           change={selectedTransaction.changeGiven}
           onClose={() => setSelectedTransaction(null)}
         />

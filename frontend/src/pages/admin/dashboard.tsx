@@ -1,10 +1,10 @@
-import { useAuth } from '../context/use-auth';
+import { useAuth } from '../../context/use-auth';
 import {
   useDashboardStats,
   useMonthlySales,
   useSevenDaySales,
   useTopSellingProducts,
-} from '../hooks/use-dashboard';
+} from '../../hooks/use-dashboard';
 import {
   LineChart,
   Line,

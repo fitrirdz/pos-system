@@ -12,6 +12,9 @@ export default function Login() {
   const navigate = useNavigate();
   const { setUser, loading, user } = useAuth();
 
+  const getDefaultPathByRole = (role: string) =>
+    role === 'ADMIN' ? '/admin/dashboard' : '/cashier/dashboard';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -19,7 +22,7 @@ export default function Login() {
     try {
       const data = await login({ username, password });
       setUser(data.user);
-      navigate('/dashboard');
+      navigate(getDefaultPathByRole(data.user.role));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
@@ -28,7 +31,7 @@ export default function Login() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/dashboard');
+      navigate(getDefaultPathByRole(user.role));
     }
   }, [user, loading, navigate]);
 

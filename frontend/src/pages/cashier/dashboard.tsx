@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/use-auth';
-import { useDashboardStats } from '../hooks/use-dashboard';
+import { useAuth } from '../../context/use-auth';
+import { useDashboardStats } from '../../hooks/use-dashboard';
 import { useState, useEffect } from 'react';
 
 export default function CashierDashboard() {
@@ -80,7 +80,7 @@ export default function CashierDashboard() {
         </div>
 
         <button
-          onClick={() => navigate('/transactions/new')}
+          onClick={() => navigate('/cashier/transactions/new')}
           className='bg-white text-primary font-bold px-8 py-4 rounded-xl text-lg hover:bg-gray-100 transition'
         >
           + New Sale

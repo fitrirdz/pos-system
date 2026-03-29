@@ -1,14 +1,14 @@
 import type { MenuItem } from '../interfaces';
 
 export const ADMIN_MENU: MenuItem[] = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Transactions', path: '/transactions' },
-  { label: 'Products', path: '/products' },
-  { label: 'Reports', path: '/reports' },
-  { label: 'Users', path: '/users' },
+  { label: 'Dashboard', path: '/admin/dashboard' },
+  { label: 'Transactions', path: '/admin/transactions' },
+  { label: 'Products', path: '/admin/products' },
+  { label: 'Reports', path: '/admin/reports' },
+  { label: 'Users', path: '/admin/users' },
 ];
 
 export const CASHIER_MENU: MenuItem[] = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Transactions', path: '/transactions' },
+  { label: 'Dashboard', path: '/cashier/dashboard' },
+  { label: 'Transactions', path: '/cashier/transactions' },
 ];

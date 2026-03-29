@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import type { CartItem, Product, Transaction, PaymentMethod } from '../interfaces';
-import PaymentModal from '../components/payment-modal';
-import ReceiptModal from '../components/receipt-modal';
-import ProductsCard from '../components/products-card';
-import Cart from '../components/cart';
-import { useToast } from '../context/use-toast';
-import { useProducts } from '../hooks/use-products';
-import { useCategories } from '../hooks/use-categories';
-import { useCreateTransaction } from '../hooks/use-transactions';
+import type { CartItem, Product, Transaction, PaymentMethod } from '../../interfaces';
+import PaymentModal from '../../components/payment-modal';
+import ReceiptModal from '../../components/receipt-modal';
+import ProductsCard from '../../components/products-card';
+import Cart from '../../components/cart';
+import { useToast } from '../../context/use-toast';
+import { useProducts } from '../../hooks/use-products';
+import { useCategories } from '../../hooks/use-categories';
+import { useCreateTransaction } from '../../hooks/use-transactions';
 
 export default function NewTransaction() {
     // Query hooks for data fetching

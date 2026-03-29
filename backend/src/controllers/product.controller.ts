@@ -2,6 +2,23 @@ import { Request, Response } from 'express';
 import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 
+const PRODUCT_WITH_CATEGORY_SELECT = {
+  id: true,
+  code: true,
+  name: true,
+  price: true,
+  stock: true,
+  createdAt: true,
+  updatedAt: true,
+  categoryId: true,
+  category: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
 /**
  * CREATE PRODUCT
  */
@@ -33,6 +50,7 @@ export async function createProduct(req: Request, res: Response) {
         stock: Number(stock),
         categoryId,
       },
+      select: PRODUCT_WITH_CATEGORY_SELECT,
     });
 
     return res.status(201).json(product);
@@ -68,9 +86,7 @@ export async function getProducts(req: Request, res: Response) {
     if (!hasQueryFilters) {
       const products = await prisma.product.findMany({
         orderBy: { name: 'asc' },
-        include: {
-          category: true,
-        },
+        select: PRODUCT_WITH_CATEGORY_SELECT,
       });
 
       return res.status(200).json(products);
@@ -101,9 +117,7 @@ export async function getProducts(req: Request, res: Response) {
         orderBy: { name: 'asc' },
         skip: (page - 1) * limit,
         take: limit,
-        include: {
-          category: true,
-        },
+        select: PRODUCT_WITH_CATEGORY_SELECT,
       }),
     ]);
 
@@ -141,6 +155,7 @@ export async function getProductById(req: Request, res: Response) {
 
     const product = await prisma.product.findUnique({
       where: { id },
+      select: PRODUCT_WITH_CATEGORY_SELECT,
     });
 
     if (!product) {
@@ -183,6 +198,7 @@ export async function updateProduct(req: Request, res: Response) {
         price: price ? Number(price) : product.price,
         stock: stock ? Number(stock) : product.stock,
       },
+      select: PRODUCT_WITH_CATEGORY_SELECT,
     });
 
     return res.status(200).json(updatedProduct);

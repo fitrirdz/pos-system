@@ -41,6 +41,7 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
 
   const {
     data: productsResponse,
@@ -115,9 +116,21 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     if (!isLoadingProducts && currentPage > totalPages) {
-      setCurrentPage(totalPages);
+      const timeout = window.setTimeout(() => {
+        setCurrentPage(totalPages);
+      }, 0);
+
+      return () => window.clearTimeout(timeout);
     }
   }, [currentPage, isLoadingProducts, totalPages]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentTimestamp(Date.now());
+    }, 60_000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -125,6 +138,36 @@ export default function AdminProductsPage() {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const parseValidDate = (value: unknown) => {
+    if (typeof value !== 'string' || !value.trim()) {
+      return null;
+    }
+
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return null;
+    }
+
+    return parsedDate;
+  };
+
+  const formatDateTime = (dateString: unknown) => {
+    const validDate = parseValidDate(dateString);
+    if (!validDate) {
+      return '-';
+    }
+
+    return new Intl.DateTimeFormat('id-ID', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jakarta',
+      timeZoneName: 'short',
+    }).format(validDate);
   };
 
   const openAddModal = () => {
@@ -263,7 +306,7 @@ export default function AdminProductsPage() {
         </div>
 
         <div className='overflow-x-auto'>
-          <table className='w-full min-w-[800px]'>
+          <table className='w-full min-w-[1100px]'>
             <thead className='border-b'>
               <tr className='text-left text-sm text-gray-600'>
                 <th className='py-3 font-semibold w-16'>No</th>
@@ -271,19 +314,21 @@ export default function AdminProductsPage() {
                 <th className='py-3 font-semibold'>Name</th>
                 <th className='py-3 font-semibold'>Price</th>
                 <th className='py-3 font-semibold'>Stock</th>
+                <th className='py-3 font-semibold'>Created Date</th>
+                <th className='py-3 font-semibold'>Updated Date</th>
                 <th className='py-3 font-semibold w-44'>Action</th>
               </tr>
             </thead>
             <tbody>
               {isLoadingProducts ? (
                 <tr>
-                  <td colSpan={6} className='py-8 text-center text-gray-500'>
+                  <td colSpan={8} className='py-8 text-center text-gray-500'>
                     Loading products...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className='py-8 text-center text-gray-500'>
+                  <td colSpan={8} className='py-8 text-center text-gray-500'>
                     No products found
                   </td>
                 </tr>
@@ -304,6 +349,12 @@ export default function AdminProductsPage() {
                     </td>
                     <td className='py-3 text-sm text-gray-900'>
                       {product.stock}
+                    </td>
+                    <td className='py-3 text-sm text-gray-700 whitespace-nowrap'>
+                      <div>{formatDateTime(product.createdAt)}</div>
+                    </td>
+                    <td className='py-3 text-sm text-gray-700 whitespace-nowrap'>
+                      <div>{formatDateTime(product.updatedAt)}</div>
                     </td>
                     <td className='py-3'>
                       <div className='flex gap-2'>

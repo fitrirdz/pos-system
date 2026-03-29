@@ -5,6 +5,9 @@ import RoleRoute from './components/role-route';
 import RoleDefaultRedirect from './components/role-default-redirect';
 import MainLayout from './layouts/main-layout';
 import AdminDashboard from './pages/admin/dashboard';
+import AdminProductsPage from './pages/admin/products';
+import AdminReportsPage from './pages/admin/reports';
+import AdminUsersPage from './pages/admin/users';
 import CashierDashboard from './pages/cashier/dashboard';
 import NewTransaction from './pages/cashier/new-transaction';
 import TransactionHistoryAdmin from './pages/admin/transaction-history';
@@ -30,6 +33,30 @@ export default function App() {
             element={
               <RoleRoute allowedRoles={['ADMIN']}>
                 <TransactionHistoryAdmin />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path='/admin/products'
+            element={
+              <RoleRoute allowedRoles={['ADMIN']}>
+                <AdminProductsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path='/admin/reports'
+            element={
+              <RoleRoute allowedRoles={['ADMIN']}>
+                <AdminReportsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path='/admin/users'
+            element={
+              <RoleRoute allowedRoles={['ADMIN']}>
+                <AdminUsersPage />
               </RoleRoute>
             }
           />

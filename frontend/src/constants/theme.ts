@@ -17,9 +17,12 @@
  */
 
 export const PRIMARY_COLOR = {
-  r: 130, 
-  g: 18, 
-  b: 87
+  // r: 130, 
+  // g: 18, 
+  // b: 87
+  r: 99, 
+  g: 102, 
+  b: 241
 };
 
 // Auto-calculate hover/darker shade (reduce each channel by ~25%)

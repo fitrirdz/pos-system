@@ -54,7 +54,7 @@ export default function MainLayout() {
           {/* align center and placed on the left */}
           <div className='flex items-center justify-start space-x-3 mb-6'>
             <img
-              src='/cashier.svg'
+              src='/shopping.svg'
               alt='MyPOS Logo'
               className='w-10 h-10'
             />

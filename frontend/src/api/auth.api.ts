@@ -16,3 +16,11 @@ export const getMe = async () => {
 export const logout = async () => {
   await api.post("/auth/logout");
 };
+
+export const changeMyPassword = async (payload: {
+  currentPassword: string;
+  newPassword: string;
+}) => {
+  const { data } = await api.patch('/users/me/password', payload);
+  return data;
+};

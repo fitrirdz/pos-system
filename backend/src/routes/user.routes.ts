@@ -3,6 +3,7 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 import { requireRole } from '../middlewares/admin.middleware';
 import {
 	activateUser,
+	changeMyPassword,
 	createUser,
 	deactivateUser,
 	getUsers,
@@ -11,6 +12,7 @@ import {
 } from '../controllers/user.controller';
 
 const router = Router();
+router.patch('/me/password', authMiddleware, changeMyPassword);
 router.get('/', authMiddleware, requireRole(['ADMIN']), getUsers);
 router.post('/', authMiddleware, requireRole(['ADMIN']), createUser);
 router.patch('/:id', authMiddleware, requireRole(['ADMIN']), updateUser);

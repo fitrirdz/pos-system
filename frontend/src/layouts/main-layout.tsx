@@ -1,14 +1,47 @@
+import { useState } from 'react';
+import axios from 'axios';
 import { Outlet, useNavigate, NavLink } from 'react-router-dom';
+import { changeMyPassword } from '../api/auth.api';
 import { useAuth } from '../context/use-auth';
+import { useToast } from '../context/use-toast';
 import { ADMIN_MENU, CASHIER_MENU } from '../constants/global';
+import ChangePasswordModal from '../components/change-password-modal';
 
 export default function MainLayout() {
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
+  };
+
+  const handleChangePassword = async (payload: {
+    currentPassword: string;
+    newPassword: string;
+  }) => {
+    setIsUpdatingPassword(true);
+
+    try {
+      await changeMyPassword(payload);
+      showToast('Password updated successfully', 'success');
+      setIsChangePasswordOpen(false);
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : null;
+
+      showToast(
+        message || 'Failed to update password',
+        'error',
+      );
+      throw error;
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   const menu = user?.role === 'ADMIN' ? ADMIN_MENU : CASHIER_MENU;
@@ -55,6 +88,20 @@ export default function MainLayout() {
           <p className='text-sm opacity-80'>{user?.username}</p>
           <p className='text-xs opacity-60 mb-3'>{user?.role}</p>
 
+          <details className='mb-3'>
+            <summary className='cursor-pointer text-sm font-semibold py-2 px-3 rounded-lg bg-primary-hover/70 hover:bg-primary-hover'>
+              Preferences
+            </summary>
+            <div className='mt-2'>
+              <button
+                onClick={() => setIsChangePasswordOpen(true)}
+                className='w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-primary-hover/70 transition'
+              >
+                Change Password
+              </button>
+            </div>
+          </details>
+
           <button
             onClick={handleLogout}
             className='w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition'
@@ -69,18 +116,33 @@ export default function MainLayout() {
         {/* Topbar (mobile fallback) */}
         <header className='md:hidden bg-primary text-white px-4 py-3 flex justify-between items-center'>
           <h1 className='font-semibold'>MyPOS</h1>
-          <button
-            onClick={handleLogout}
-            className='bg-red-600 px-3 py-1 rounded text-sm'
-          >
-            Logout
-          </button>
+          <div className='flex items-center gap-2'>
+            <button
+              onClick={() => setIsChangePasswordOpen(true)}
+              className='bg-primary-hover px-3 py-1 rounded text-sm'
+            >
+              Preferences
+            </button>
+            <button
+              onClick={handleLogout}
+              className='bg-red-600 px-3 py-1 rounded text-sm'
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         <main className='p-6 flex-1'>
           <Outlet />
         </main>
       </div>
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        isLoading={isUpdatingPassword}
+        onCancel={() => setIsChangePasswordOpen(false)}
+        onSubmit={handleChangePassword}
+      />
     </div>
   );
 }

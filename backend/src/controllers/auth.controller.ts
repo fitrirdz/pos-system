@@ -23,6 +23,12 @@ export async function login(req: Request, res: Response) {
       });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({
+        message: 'Your account is inactive',
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {

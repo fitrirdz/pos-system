@@ -25,6 +25,11 @@ async function login(req, res) {
                 message: 'Username or password is incorrect',
             });
         }
+        if (!user.isActive) {
+            return res.status(403).json({
+                message: 'Your account is inactive',
+            });
+        }
         const isMatch = await bcrypt_1.default.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({

@@ -6,4 +6,8 @@ const admin_middleware_1 = require("../middlewares/admin.middleware");
 const user_controller_1 = require("../controllers/user.controller");
 const router = (0, express_1.Router)();
 router.get('/', auth_middleware_1.authMiddleware, (0, admin_middleware_1.requireRole)(['ADMIN']), user_controller_1.getUsers);
+router.post('/', auth_middleware_1.authMiddleware, (0, admin_middleware_1.requireRole)(['ADMIN']), user_controller_1.createUser);
+router.patch('/:id', auth_middleware_1.authMiddleware, (0, admin_middleware_1.requireRole)(['ADMIN']), user_controller_1.updateUser);
+router.patch('/:id/deactivate', auth_middleware_1.authMiddleware, (0, admin_middleware_1.requireRole)(['ADMIN']), user_controller_1.deactivateUser);
+router.patch('/:id/role', auth_middleware_1.authMiddleware, (0, admin_middleware_1.requireRole)(['ADMIN']), user_controller_1.updateUserRole);
 exports.default = router;

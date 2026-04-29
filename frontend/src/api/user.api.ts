@@ -48,3 +48,8 @@ export const updateUserRole = async (
   const res = await api.patch(`/users/${id}/role`, payload);
   return res.data;
 };
+
+export const activateUser = async (id: string): Promise<User> => {
+  const res = await api.patch(`/users/${id}/activate`);
+  return res.data;
+};

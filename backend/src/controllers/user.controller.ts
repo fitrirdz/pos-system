@@ -199,3 +199,30 @@ export const updateUserRole = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const activateUser = async (req: Request, res: Response) => {
+  try {
+    const id = String(req.params.id ?? '');
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { isActive: true },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        isActive: true,
+      },
+    });
+
+    return res.status(200).json(user);
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.status(500).json({
+      message: 'Failed to activate user',
+    });
+  }
+};

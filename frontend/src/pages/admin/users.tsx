@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  activateUser,
   createUser,
   deactivateUser,
   type UserRole,
@@ -8,6 +9,7 @@ import {
   updateUserRole,
 } from '../../api/user.api';
 import DeleteConfirmationModal from '../../components/delete-confirmation-modal';
+import UserFormModal from '../../components/user-form-modal';
 import { useToast } from '../../context/use-toast';
 import { USERS_QUERY_KEY, useUsers } from '../../hooks/use-users';
 import type { User } from '../../interfaces';
@@ -91,6 +93,17 @@ export default function AdminUsersPage() {
     },
   });
 
+  const activateUserMutation = useMutation({
+    mutationFn: activateUser,
+    onSuccess: () => {
+      invalidateUsers();
+      showToast('User activated successfully', 'success');
+    },
+    onError: () => {
+      showToast('Failed to activate user', 'error');
+    },
+  });
+
   const updateRoleMutation = useMutation({
     mutationFn: ({ id, role }: { id: string; role: UserRole }) =>
       updateUserRole(id, { role }),
@@ -123,6 +136,15 @@ export default function AdminUsersPage() {
     setEditingUser(null);
     setForm(defaultFormState);
     setIsModalOpen(false);
+  };
+
+  const handleFormChange = (field: 'username' | 'password' | 'role', value: string) => {
+    setForm((prev) => {
+      if (field === 'role') {
+        return { ...prev, role: value as UserRole };
+      }
+      return { ...prev, [field]: value };
+    });
   };
 
   const handleSaveUser = () => {
@@ -264,27 +286,38 @@ export default function AdminUsersPage() {
                       </td>
                       <td className='py-3'>
                         <div className='flex flex-wrap gap-2'>
-                          <button
-                            onClick={() => openEditModal(user)}
-                            disabled={!isActive}
-                            className='px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-60 disabled:cursor-not-allowed'
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleToggleRole(user)}
-                            disabled={!isActive || updateRoleMutation.isPending}
-                            className='px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-60 disabled:cursor-not-allowed'
-                          >
-                            {user.role === 'ADMIN' ? 'Set Cashier' : 'Set Admin'}
-                          </button>
-                          <button
-                            onClick={() => setPendingDeactivateUser(user)}
-                            disabled={!isActive || deactivateUserMutation.isPending}
-                            className='px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed'
-                          >
-                            Deactivate
-                          </button>
+                          {isActive ? (
+                            <>
+                              <button
+                                onClick={() => openEditModal(user)}
+                                className='px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-60 disabled:cursor-not-allowed'
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleToggleRole(user)}
+                                disabled={updateRoleMutation.isPending}
+                                className='px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-60 disabled:cursor-not-allowed'
+                              >
+                                {user.role === 'ADMIN' ? 'Set Cashier' : 'Set Admin'}
+                              </button>
+                              <button
+                                onClick={() => setPendingDeactivateUser(user)}
+                                disabled={deactivateUserMutation.isPending}
+                                className='px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed'
+                              >
+                                Deactivate
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => activateUserMutation.mutate(user.id)}
+                              disabled={activateUserMutation.isPending}
+                              className='px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed'
+                            >
+                              Activate
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -301,88 +334,15 @@ export default function AdminUsersPage() {
         </p>
       </div>
 
-      {isModalOpen ? (
-        <div className='fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4'>
-          <div className='w-full max-w-lg bg-white rounded-xl shadow-xl p-6 space-y-4'>
-            <h2 className='text-xl font-bold text-gray-900'>
-              {editingUser ? 'Edit User' : 'Add User'}
-            </h2>
-
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Username
-                </label>
-                <input
-                  type='text'
-                  value={form.username}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, username: e.target.value }))
-                  }
-                  placeholder='Enter username'
-                  className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
-                />
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Password {editingUser ? '(Optional)' : ''}
-                </label>
-                <input
-                  type='password'
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, password: e.target.value }))
-                  }
-                  placeholder={
-                    editingUser ? 'Leave empty to keep current password' : 'Enter password'
-                  }
-                  className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
-                />
-              </div>
-
-              {!editingUser ? (
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Role
-                  </label>
-                  <select
-                    value={form.role}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, role: e.target.value as UserRole }))
-                    }
-                    className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary'
-                  >
-                    <option value='CASHIER'>CASHIER</option>
-                    <option value='ADMIN'>ADMIN</option>
-                  </select>
-                </div>
-              ) : null}
-            </div>
-
-            <div className='flex justify-end gap-2 pt-2'>
-              <button
-                onClick={closeModal}
-                disabled={createUserMutation.isPending || updateUserMutation.isPending}
-                className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed'
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveUser}
-                disabled={createUserMutation.isPending || updateUserMutation.isPending}
-                className='px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed'
-              >
-                {createUserMutation.isPending || updateUserMutation.isPending
-                  ? 'Saving...'
-                  : editingUser
-                    ? 'Save Changes'
-                    : 'Create User'}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <UserFormModal
+        isOpen={isModalOpen}
+        editingUser={editingUser}
+        form={form}
+        isLoading={createUserMutation.isPending || updateUserMutation.isPending}
+        onFormChange={handleFormChange}
+        onSave={handleSaveUser}
+        onCancel={closeModal}
+      />
 
       <DeleteConfirmationModal
         isOpen={Boolean(pendingDeactivateUser)}

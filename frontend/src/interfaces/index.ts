@@ -25,7 +25,8 @@ export interface CartItem extends Product {
 export interface User {
   id: string;
   username: string;
-  role: string;
+  role: 'ADMIN' | 'CASHIER';
+  isActive?: boolean;
 }
 
 export interface TransactionItem {

@@ -14,6 +14,7 @@ import {
 import { useCategories } from '../../hooks/use-categories';
 import { useToast } from '../../context/use-toast';
 import type { Product } from '../../interfaces';
+import DeleteConfirmationModal from '../../components/delete-confirmation-modal';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -64,6 +65,8 @@ export default function AdminProductsPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productPendingDelete, setProductPendingDelete] =
+    useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(defaultFormState);
 
   const createProductMutation = useMutation({
@@ -240,15 +243,27 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = (product: Product) => {
-    const confirmed = window.confirm(
-      `Delete product ${product.name} (${product.code})?`,
-    );
+    setProductPendingDelete(product);
+  };
 
-    if (!confirmed) {
+  const closeDeleteModal = () => {
+    if (deleteProductMutation.isPending) {
       return;
     }
 
-    deleteProductMutation.mutate(product.id);
+    setProductPendingDelete(null);
+  };
+
+  const confirmDeleteProduct = () => {
+    if (!productPendingDelete) {
+      return;
+    }
+
+    deleteProductMutation.mutate(productPendingDelete.id, {
+      onSuccess: () => {
+        setProductPendingDelete(null);
+      },
+    });
   };
 
   return (
@@ -513,6 +528,17 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={Boolean(productPendingDelete)}
+        title='Delete Product'
+        description='Are you sure you want to delete this product?'
+        itemName={productPendingDelete?.name ?? ''}
+        itemCode={productPendingDelete?.code}
+        isLoading={deleteProductMutation.isPending}
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDeleteProduct}
+      />
     </div>
   );
 }

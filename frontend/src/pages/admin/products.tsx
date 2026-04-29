@@ -42,7 +42,6 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
 
   const {
     data: productsResponse,
@@ -126,14 +125,6 @@ export default function AdminProductsPage() {
       return () => window.clearTimeout(timeout);
     }
   }, [currentPage, isLoadingProducts, totalPages]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setCurrentTimestamp(Date.now());
-    }, 60_000);
-
-    return () => window.clearInterval(interval);
-  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
